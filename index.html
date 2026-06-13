@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CaisseAsso</title>
+<style>
+:root {
+  --ink:#1a1a2e; --ink-light:#4a4a6a; --paper:#f7f7fb; --white:#fff;
+  --accent:#5b4fcf; --accent-dk:#3d34a5; --accent-lt:#ede9ff;
+  --success:#2db37a; --danger:#e0433a; --warn:#e8b600;
+  --border:#e2e2ec; --radius:12px; --radius-sm:8px;
+  --shadow:0 2px 12px rgba(91,79,207,.10);
+  --shadow-md:0 4px 24px rgba(91,79,207,.15);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;}
+
+/* ── ACCUEIL ── */
+#screen-home{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;gap:14px;position:relative;overflow:hidden;
+  background:url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=900&q=80') center/cover no-repeat;
+}
+#screen-home::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom, rgba(10,8,30,.72) 0%, rgba(10,8,30,.60) 60%, rgba(10,8,30,.90) 100%);
+  z-index:0;
+}
+.home-logo{font-size:2.2rem;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:4px;position:relative;z-index:2;text-shadow:0 2px 12px rgba(0,0,0,.5);}
+.home-logo span{color:#a78bfa;}
+.home-subtitle{color:rgba(255,255,255,.7);font-size:.88rem;margin-bottom:12px;position:relative;z-index:2;}
+.role-btn{width:100%;max-width:340px;padding:18px 24px;border-radius:var(--radius);border:none;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:14px;transition:transform .15s,box-shadow .15s;position:relative;z-index:2;}
+.role-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.role-btn .role-icon{font-size:1.5rem;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.role-btn .role-text{text-align:left;}
+.role-btn .role-name{font-size:1rem;font-weight:700;}
+.role-btn .role-desc{font-size:.78rem;opacity:.7;font-weight:400;margin-top:2px;}
+.btn-admin{background:#fff;color:var(--ink);}
+.btn-client{background:var(--accent);color:#fff;}
+.btn-stand{background:var(--success);color:#fff;}
+.btn-caisse{background:var(--warn);color:var(--ink);}
+
+/* ── BANDE LOGOS PAIEMENT ── */
+.pay-strip{
+  position:absolute;bottom:0;left:0;right:0;z-index:2;
+  padding:14px 20px 18px;
+  background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 100%);
+  display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+}
+.pay-badge{
+  display:flex;align-items:center;justify-content:center;
+  border-radius:10px;padding:7px 14px;
+  font-weight:800;font-size:.82rem;letter-spacing:.3px;
+  box-shadow:0 2px 10px rgba(0,0,0,.35);white-space:nowrap;
+}
+
+/* ── HEADER ── */
+header{background:var(--white);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+.logo{font-size:1.1rem;font-weight:700;color:var(--accent);}
+.logo span{color:var(--ink);}
+.badge{font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;}
+.badge-admin{background:var(--accent-lt);color:var(--accent-dk);}
+.badge-client{background:#e3f9f0;color:#1a8a58;}
+.badge-stand{background:#e3f9f0;color:#1a8a58;}
+.badge-caisse{background:#fff8e0;color:#a07800;}
+.btn-back{background:none;border:none;font-size:.85rem;color:var(--ink-light);cursor:pointer;display:flex;align-items:center;gap:4px;padding:6px 0;}
+
+/* ── LAYOUT ── */
+.container{max-width:860px;margin:0 auto;padding:24px 14px;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);}
+.section-title{font-size:1rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.icon-box{width:26px;height:26px;background:var(--accent-lt);color:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+
+/* ── FORMS ── */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg.full{grid-template-columns:1fr;}
+.f{display:flex;flex-direction:column;gap:4px;}
+.f.s2{grid-column:span 2;}
+label{font-size:.74rem;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.4px;}
+input[type=text],input[type=number],input[type=date],textarea,select{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;font-size:.92rem;color:var(--ink);background:var(--white);outline:none;transition:border-color .15s;font-family:inherit;width:100%;}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);}
+textarea{resize:vertical;min-height:60px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--accent-dk);}
+.btn-success{background:var(--success);color:#fff;}
+.btn-success:hover:not(:disabled){background:#1a9a68;}
+.btn-secondary{background:var(--accent-lt);color:var(--accent-dk);}
+.btn-secondary:hover{background:#ddd6ff;}
+.btn-danger{background:#ffeaea;color:var(--danger);}
+.btn-danger:hover{background:#ffd5d5;}
+.btn-warn{background:#fff8e0;color:#a07800;}
+.btn-sm{padding:5px 11px;font-size:.78rem;}
+.btn-full{width:100%;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;background:var(--accent-lt);border-radius:var(--radius);padding:3px;margin-bottom:20px;}
+.tab{flex:1;padding:8px;text-align:center;border-radius:var(--radius-sm);font-size:.82rem;font-weight:600;cursor:pointer;color:var(--accent-dk);border:none;background:transparent;transition:all .15s;}
+.tab.active{background:var(--white);color:var(--accent);box-shadow:var(--shadow);}
+
+/* ── LISTS ── */
+.event-item{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:9px;background:var(--white);transition:border-color .15s;}
+.event-item:hover{border-color:var(--accent);}
+.event-name{font-weight:700;font-size:.92rem;}
+.event-date{font-size:.75rem;color:var(--ink-light);margin-top:2px;}
+.pill{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:99px;}
+.pill-green{background:#e3f9f0;color:#1a8a58;}
+.pill-gray{background:#f0f0f0;color:#666;}
+.pill-blue{background:var(--accent-lt);color:var(--accent-dk);}
+.pill-warn{background:#fff8e0;color:#a07800;}
+
+/* ── STANDS GRID ── */
+.stands-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:14px;}
+.stand-card{border:2px solid var(--border);border-radius:var(--radius);padding:13px;transition:all .15s;}
+.stand-card:hover{border-color:var(--accent);}
+.stand-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.stand-name{font-weight:700;font-size:.88rem;}
+.stand-count{font-size:.73rem;color:var(--ink-light);}
+
+/* ── ARTICLES ── */
+.art-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);}
+.art-photo{width:48px;height:48px;border-radius:7px;object-fit:cover;background:var(--paper);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;}
+.art-photo img{width:100%;height:100%;object-fit:cover;}
+.art-name{font-weight:600;font-size:.88rem;}
+.art-sub{font-size:.74rem;color:var(--ink-light);margin-top:1px;}
+.art-price{font-size:.98rem;font-weight:700;color:var(--accent);white-space:nowrap;}
+
+/* ── UPLOAD ── */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;cursor:pointer;color:var(--ink-light);font-size:.8rem;transition:all .15s;position:relative;}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-lt);}
+.upload-preview{width:56px;height:56px;border-radius:7px;object-fit:cover;margin:0 auto 5px;display:block;}
+
+/* ── COLOR SWATCHES ── */
+.swatches{display:flex;gap:7px;flex-wrap:wrap;}
+.swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .1s;}
+.swatch.selected{border-color:var(--ink);transform:scale(1.15);}
+
+/* ── CLIENT MENU ── */
+.evt-select-screen{padding:24px 14px;}
+.evt-card{background:var(--white);border:2px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:10px;cursor:pointer;transition:all .15s;}
+.evt-card:hover,.evt-card.active{border-color:var(--accent);background:var(--accent-lt);}
+.evt-card-name{font-weight:700;font-size:1rem;}
+.evt-card-date{font-size:.78rem;color:var(--ink-light);margin-top:3px;}
+
+.stands-tabs{display:flex;gap:6px;overflow-x:auto;padding:0 14px 12px;scrollbar-width:none;}
+.stands-tabs::-webkit-scrollbar{display:none;}
+.stand-tab{flex-shrink:0;padding:7px 14px;border-radius:99px;font-size:.82rem;font-weight:600;border:2px solid var(--border);background:var(--white);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.stand-tab.active{color:#fff;border-color:transparent;}
+
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 14px;}
+.menu-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all .15s;position:relative;}
+.menu-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow);}
+.menu-card.out-of-stock{opacity:.5;cursor:not-allowed;}
+.menu-card-img{width:100%;height:110px;object-fit:cover;background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
+.menu-card-img img{width:100%;height:100%;object-fit:cover;}
+.menu-card-body{padding:10px;}
+.menu-card-name{font-weight:600;font-size:.85rem;line-height:1.3;}
+.menu-card-price{font-weight:700;color:var(--accent);font-size:.92rem;margin-top:4px;}
+.menu-card-stock{font-size:.72rem;color:var(--ink-light);}
+.qty-badge{position:absolute;top:7px;right:7px;background:var(--accent);color:#fff;border-radius:99px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;}
+
+/* ── PANIER ── */
+.cart-bar{position:fixed;bottom:0;left:0;right:0;background:var(--accent);color:#fff;padding:14px 20px;padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px));display:flex;align-items:center;justify-content:space-between;cursor:pointer;z-index:200;transform:translateY(100%);transition:transform .2s;}
+.cart-bar.visible{transform:translateY(0);}
+.cart-bar-info{font-weight:700;}
+.cart-bar-count{font-size:.82rem;opacity:.8;}
+
+.cart-panel{position:fixed;inset:0;background:var(--white);z-index:300;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .25s;}
+.cart-panel.open{transform:translateY(0);}
+.cart-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cart-title{font-weight:700;font-size:1.05rem;}
+.cart-close{background:none;border:none;font-size:1.4rem;color:var(--ink-light);cursor:pointer;}
+.cart-body{flex:1;overflow-y:auto;padding:16px 20px;}
+.cart-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.cart-item-info{flex:1;}
+.cart-item-name{font-weight:600;font-size:.9rem;}
+.cart-item-stand{font-size:.74rem;color:var(--ink-light);}
+.cart-item-price{font-weight:700;color:var(--accent);white-space:nowrap;}
+.qty-ctrl{display:flex;align-items:center;gap:8px;}
+.qty-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;transition:all .15s;}
+.qty-btn:hover{border-color:var(--accent);color:var(--accent);}
+.qty-val{font-weight:700;font-size:.92rem;min-width:20px;text-align:center;}
+.cart-footer{padding:16px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom, 16px));border-top:1px solid var(--border);}
+.cart-total{display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;margin-bottom:14px;}
+
+/* ── COMMANDE CONFIRMÉE ── */
+.order-confirm{text-align:center;padding:40px 20px;}
+.order-number{font-size:3.5rem;font-weight:800;color:var(--accent);line-height:1;}
+.order-label{font-size:.85rem;color:var(--ink-light);margin-top:4px;}
+.order-items{text-align:left;margin:20px 0;}
+.order-stand-block{margin-bottom:14px;}
+.order-stand-name{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-light);margin-bottom:6px;}
+.order-line{display:flex;justify-content:space-between;font-size:.88rem;padding:4px 0;}
+
+/* ── STAND VIEW ── */
+.order-card{background:var(--white);border:2px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;transition:all .15s;}
+.order-card.new{border-color:var(--accent);animation:pulse .4s ease;}
+@keyframes pulse{0%{transform:scale(1.02)}100%{transform:scale(1)}}
+.order-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.order-num{font-size:1.3rem;font-weight:800;color:var(--accent);}
+.order-time{font-size:.75rem;color:var(--ink-light);}
+.order-line-stand{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);}
+.order-line-stand:last-child{border-bottom:none;}
+.order-art-name{font-weight:600;font-size:.9rem;}
+.order-art-qty{font-size:.82rem;color:var(--ink-light);}
+
+/* ── CAISSE ── */
+.caisse-tabs{display:flex;gap:3px;background:var(--accent-lt);border-radius:var(--radius);padding:3px;margin-bottom:16px;}
+.caisse-tab{flex:1;padding:8px;text-align:center;border-radius:var(--radius-sm);font-size:.82rem;font-weight:600;cursor:pointer;color:var(--accent-dk);border:none;background:transparent;}
+.caisse-tab.active{background:var(--white);color:var(--accent);box-shadow:var(--shadow);}
+.payment-methods{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+.payment-methods.has-3{grid-template-columns:1fr 1fr 1fr;}
+.pay-btn{padding:16px;border-radius:var(--radius);border:2px solid var(--border);background:var(--white);cursor:pointer;text-align:center;font-weight:700;font-size:.9rem;transition:all .15s;}
+.pay-btn:hover{border-color:var(--accent);}
+.pay-btn .pay-icon{font-size:1.6rem;margin-bottom:4px;}
+.pay-btn.selected{border-color:var(--accent);background:var(--accent-lt);}
+
+/* ── TOAST ── */
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(26,26,46,.45);display:flex;align-items:center;justify-content:center;z-index:400;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--white);border-radius:var(--radius);padding:24px;width:100%;max-width:420px;box-shadow:var(--shadow-md);transform:translateY(14px);transition:transform .2s;}
+.overlay.open .modal{transform:translateY(0);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-size:1rem;font-weight:700;}
+.modal-close{background:none;border:none;font-size:1.3rem;color:var(--ink-light);cursor:pointer;}
+
+.empty{text-align:center;padding:36px 16px;color:var(--ink-light);}
+.empty .e{font-size:2.2rem;margin-bottom:8px;}
+.empty p{font-size:.85rem;}
+
+@media(max-width:560px){.fg{grid-template-columns:1fr;}.f.s2{grid-column:span 1;}.tabs{font-size:.76rem;}}
+</style>
+</head>
+<body>
+
+<!-- ══ ACCUEIL ════════════════════════════════════════════ -->
+<div id="screen-home">
+
+  <!-- Bande logos paiement en bas -->
+  <div class="pay-strip">
+    <div class="pay-badge" style="background:#1A1F71;color:#fff">VISA</div>
+    <div class="pay-badge" style="background:#FF5F00;color:#fff">
+      <span style="width:14px;height:14px;border-radius:50%;background:#EB001B;display:inline-block;margin-right:-4px;vertical-align:middle"></span>
+      <span style="width:14px;height:14px;border-radius:50%;background:#F79E1B;display:inline-block;margin-right:6px;vertical-align:middle"></span>MC
+    </div>
+    <div class="pay-badge" style="background:#000;color:#fff">🍎 Pay</div>
+    <div class="pay-badge" style="background:#fff;color:#5F6368;border:1px solid #e0e0e0"><span style="color:#4285F4;font-weight:900">G</span>&nbsp;Pay</div>
+    <div class="pay-badge" style="background:#003189;color:#fff">CB</div>
+    <div class="pay-badge" style="background:#635BFF;color:#fff">stripe</div>
+  </div>
+
+  <div class="home-logo">Caisse<span>Asso</span></div>
+  <div class="home-subtitle">Choisissez votre rôle</div>
+  <button class="role-btn btn-client" onclick="goTo('client')">
+    <div class="role-icon" style="background:rgba(255,255,255,.2)">🛒</div>
+    <div class="role-text"><div class="role-name">🍴 Découvrir le menu</div><div class="role-desc">Parcourir le menu et passer commande</div></div>
+  </button>
+  <button class="role-btn btn-admin" onclick="askPassword('admin')">
+    <div class="role-icon" style="background:var(--accent-lt)">⚙️</div>
+    <div class="role-text"><div class="role-name">Administration</div><div class="role-desc">Gérer événements, stands et menus</div></div>
+  </button>
+  <button class="role-btn btn-stand" onclick="askPassword('stand')">
+    <div class="role-icon" style="background:rgba(255,255,255,.2)">🍽️</div>
+    <div class="role-text"><div class="role-name">Stand</div><div class="role-desc">Voir et servir les commandes</div></div>
+  </button>
+  <button class="role-btn btn-caisse" onclick="askPassword('caisse')">
+    <div class="role-icon" style="background:rgba(255,255,255,.3)">💰</div>
+    <div class="role-text"><div class="role-name">Caisse</div><div class="role-desc">Encaisser les paiements</div></div>
+  </button>
+</div>
+
+<!-- ══ MODAL MOT DE PASSE ══════════════════════════════════ -->
+<div class="overlay" id="modal-pwd">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="pwd-title">Accès protégé</span>
+      <button class="modal-close" onclick="closePwdModal()">✕</button>
+    </div>
+    <div style="margin-bottom:16px;font-size:.83rem;color:var(--ink-light);text-align:center">
+      Entrez le mot de passe pour continuer
+    </div>
+    <div class="f" style="margin-bottom:16px">
+      <input id="pwd-input" type="password" placeholder="Mot de passe" autocomplete="off"
+        style="text-align:center;font-size:1.3rem;letter-spacing:4px"
+        onkeydown="if(event.key==='Enter') checkPassword()">
+    </div>
+    <div id="pwd-error" style="display:none;color:var(--danger);font-size:.82rem;text-align:center;margin-bottom:10px">
+      ❌ Mot de passe incorrect
+    </div>
+    <button class="btn btn-primary btn-full" onclick="checkPassword()">Valider</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN ══════════════════════════════════════════════ -->
+<div id="screen-admin" style="display:none">
+  <header>
+    <button class="btn-back" onclick="goTo('home')">← Accueil</button>
+    <div class="logo">Caisse<span>Asso</span></div>
+    <span class="badge badge-admin">Admin</span>
+  </header>
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="adminTab('events')">📅 Événements</button>
+      <button class="tab" onclick="adminTab('stands')">🏪 Stands</button>
+      <button class="tab" onclick="adminTab('articles')">🍽️ Articles</button>
+      <button class="tab" onclick="adminTab('orders')">💰 Commandes</button>
+    </div>
+
+    <!-- EVENTS -->
+    <div id="atab-events">
+      <div class="card">
+        <div class="section-title"><div class="icon-box">+</div>Créer un événement</div>
+        <div class="fg">
+          <div class="f s2"><label>Nom</label><input id="evt-name" type="text" placeholder="ex : TILY du 26 juin"></div>
+          <div class="f"><label>Date</label><input id="evt-date" type="date"></div>
+          <div class="f"><label>Lieu</label><input id="evt-lieu" type="text" placeholder="ex : Salle paroissiale"></div>
+        </div>
+        <div style="margin-top:14px"><button class="btn btn-primary" onclick="addEvent()">Créer l'événement</button></div>
+      </div>
+      <div class="section-title"><div class="icon-box">📋</div>Événements</div>
+      <div id="events-list"></div>
+    </div>
+
+    <!-- STANDS -->
+    <div id="atab-stands" style="display:none">
+      <div class="card">
+        <div class="f" style="margin-bottom:14px"><label>Événement</label>
+          <select id="stands-evt" onchange="renderStands()"><option value="">— Sélectionner —</option></select>
+        </div>
+        <div id="stands-form" style="display:none">
+          <div class="section-title"><div class="icon-box">+</div>Ajouter un stand</div>
+          <div class="fg">
+            <div class="f s2"><label>Nom du stand</label><input id="stand-name" type="text" placeholder="ex : Boissons, Plats..."></div>
+            <div class="f s2"><label>Couleur</label><div class="swatches" id="swatches"></div></div>
+          </div>
+          <div style="margin-top:14px"><button class="btn btn-primary" onclick="addStand()">Ajouter</button></div>
+        </div>
+      </div>
+      <div id="stands-list"></div>
+    </div>
+
+    <!-- ARTICLES -->
+    <div id="atab-articles" style="display:none">
+      <div class="card">
+        <div class="fg" style="margin-bottom:14px">
+          <div class="f"><label>Événement</label><select id="art-evt" onchange="loadArtStands()"><option value="">— Événement —</option></select></div>
+          <div class="f"><label>Stand</label><select id="art-stand" onchange="renderArticles()"><option value="">— Stand —</option></select></div>
+        </div>
+        <div id="art-form" style="display:none">
+          <div class="section-title"><div class="icon-box">+</div>Ajouter un article</div>
+          <div class="fg">
+            <div class="f s2"><label>Nom</label><input id="art-name" type="text" placeholder="ex : Poulet braisé"></div>
+            <div class="f"><label>Prix (€)</label><input id="art-price" type="number" min="0" step="0.5"></div>
+            <div class="f"><label>Stock</label><input id="art-stock" type="number" min="0" step="1"></div>
+            <div class="f s2">
+              <label>Photo</label>
+              <div style="display:flex;gap:8px;margin-bottom:8px">
+                <button type="button" class="btn btn-secondary" style="flex:1" onclick="document.getElementById('art-camera-input').click()">📷 Prendre une photo</button>
+                <button type="button" class="btn btn-secondary" style="flex:1" onclick="document.getElementById('art-photo-input').click()">🖼️ Choisir un fichier</button>
+              </div>
+              <input type="file" id="art-camera-input" accept="image/*" capture="environment" onchange="previewPhoto(event,'photo-preview','upload-hint')" style="display:none">
+              <input type="file" id="art-photo-input" accept="image/*" onchange="previewPhoto(event,'photo-preview','upload-hint')" style="display:none">
+              <div style="text-align:center">
+                <img id="photo-preview" class="upload-preview" style="display:none;border-radius:8px;max-width:120px">
+                <div id="upload-hint" style="font-size:.8rem;color:var(--ink-light)">Aucune photo sélectionnée</div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:14px"><button class="btn btn-primary" onclick="addArticle()">Ajouter l'article</button></div>
+        </div>
+      </div>
+      <div class="section-title" id="art-list-title" style="display:none"><div class="icon-box">🍽️</div>Articles</div>
+      <div id="articles-list" style="display:flex;flex-direction:column;gap:9px;"></div>
+    </div>
+
+    <!-- COMMANDES -->
+    <div id="atab-orders" style="display:none">
+      <div class="card">
+        <div class="f"><label>Événement</label>
+          <select id="admin-orders-evt" onchange="renderAdminOrders()"><option value="">— Sélectionner —</option></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:3px;background:var(--accent-lt);border-radius:var(--radius);padding:3px;margin-bottom:16px;" id="admin-orders-tabs">
+        <button class="caisse-tab active" onclick="adminOrdersTab('pending')">⏳ En attente</button>
+        <button class="caisse-tab" onclick="adminOrdersTab('done')">✅ Encaissées</button>
+        <button class="caisse-tab" onclick="adminOrdersTab('history')">📋 Historique</button>
+      </div>
+      <div id="admin-orders-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ CLIENT ═════════════════════════════════════════════ -->
+<div id="screen-client" style="display:none">
+  <header>
+    <button class="btn-back" onclick="goTo('home')">← Accueil</button>
+    <div class="logo">Caisse<span>Asso</span></div>
+    <span class="badge badge-client">Commander</span>
+  </header>
+
+  <!-- Sélection événement -->
+  <div id="client-evt-select" style="padding:20px 14px">
+    <div class="section-title" style="padding:0 0 12px"><div class="icon-box">📅</div>Choisir un événement</div>
+    <div id="client-evts-list"></div>
+  </div>
+
+  <!-- Menu -->
+  <div id="client-menu" style="display:none">
+    <div style="padding:12px 14px 0;display:flex;align-items:center;justify-content:space-between">
+      <button class="btn-back" onclick="showClientEvtSelect()">← Événements</button>
+      <div id="client-evt-name" style="font-weight:700;font-size:.9rem;color:var(--ink-light)"></div>
+    </div>
+    <div class="stands-tabs" id="client-stands-tabs"></div>
+    <div class="menu-grid" id="client-menu-grid"></div>
+    <div style="height:80px"></div>
+  </div>
+
+  <!-- Confirmation commande / Bon vivant -->
+  <div id="client-confirm" style="display:none;padding:20px 14px">
+    <div class="order-confirm">
+
+      <!-- Statut paiement - change dynamiquement -->
+      <div id="bon-status-block">
+        <div id="bon-status-icon" style="font-size:3rem;margin-bottom:10px">⏳</div>
+        <div id="bon-status-title" style="font-weight:700;font-size:1.1rem;margin-bottom:4px">Commande enregistrée</div>
+        <div id="bon-status-sub" style="color:var(--ink-light);font-size:.85rem;margin-bottom:16px">Rendez-vous à la caisse pour régler</div>
+      </div>
+
+      <!-- N° commande - grand et visible -->
+      <div id="bon-payment-banner" style="padding:16px;border-radius:var(--radius);margin-bottom:16px;border:3px solid var(--border);transition:all .3s">
+        <div id="bon-order-num" class="order-number" style="font-size:4rem">—</div>
+        <div class="order-label" style="margin-top:4px">N° de commande</div>
+        <div id="bon-client-name" style="font-size:1rem;font-weight:700;color:var(--accent-dk);margin-top:6px"></div>
+      </div>
+
+      <!-- Détail par stand -->
+      <div id="bon-items"></div>
+
+      <!-- Total -->
+      <div style="margin-top:16px;padding:14px;background:var(--accent-lt);border-radius:var(--radius);font-weight:700;font-size:1.05rem;display:flex;justify-content:space-between">
+        <span>Total</span><span id="bon-total" style="color:var(--accent)"></span>
+      </div>
+
+      <!-- Info paiement -->
+      <div id="bon-payment-info" style="margin-top:10px;padding:12px;border-radius:var(--radius);font-size:.85rem;font-weight:600;text-align:center"></div>
+
+      <button class="btn btn-primary btn-full" style="margin-top:20px" onclick="newOrder()">Nouvelle commande</button>
+    </div>
+  </div>
+
+  <!-- Panier flottant -->
+  <div class="cart-bar" id="cart-bar" onclick="openCart()">
+    <div>
+      <div class="cart-bar-info" id="cart-bar-total">0.00 €</div>
+      <div class="cart-bar-count" id="cart-bar-count">0 article</div>
+    </div>
+    <div style="font-weight:700;font-size:.9rem">Voir le panier →</div>
+  </div>
+</div>
+
+<!-- ══ PANIER PANEL ════════════════════════════════════════ -->
+<div class="cart-panel" id="cart-panel">
+  <div class="cart-header">
+    <div class="cart-title">🛒 Mon panier</div>
+    <button class="cart-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cart-body"></div>
+  <div class="cart-footer">
+    <div class="cart-total"><span>Total</span><span id="cart-total-price" style="color:var(--accent)">0.00 €</span></div>
+
+    <!-- Identité client -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-light);margin-bottom:8px">Vos informations</div>
+      <input type="text" id="client-prenom" placeholder="Prénom *" style="margin-bottom:8px;border-radius:var(--radius-sm);border:1.5px solid var(--border);padding:9px 12px;font-size:.92rem;width:100%;outline:none;font-family:inherit">
+      <input type="text" id="client-contact" placeholder="Téléphone ou email (optionnel)" style="border-radius:var(--radius-sm);border:1.5px solid var(--border);padding:9px 12px;font-size:.92rem;width:100%;outline:none;font-family:inherit">
+    </div>
+
+    <div class="payment-methods has-3">
+      <div class="pay-btn" id="pay-cash" onclick="selectPayment('especes')">
+        <div class="pay-icon">💵</div>Espèces<br><small style="font-weight:400;font-size:.72rem">Payer à la caisse</small>
+      </div>
+      <div class="pay-btn" id="pay-card" onclick="selectPayment('carte')">
+        <div class="pay-icon">💳</div>Terminal<br><small style="font-weight:400;font-size:.72rem">Carte à la caisse</small>
+      </div>
+      <div class="pay-btn" id="pay-online" onclick="selectPayment('en_ligne')" style="position:relative">
+        <div class="pay-icon">📱</div>Payer en ligne<br>
+        <small style="font-weight:400;font-size:.68rem;line-height:1.2;display:block;margin-top:2px">
+          <span style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;margin-top:3px">
+            <span style="background:#1A1F71;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;font-weight:700">VISA</span>
+            <span style="background:#FF5F00;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;font-weight:700">MC</span>
+            <span style="background:#000;color:#fff;border-radius:3px;padding:1px 3px;font-size:.6rem">🍎Pay</span>
+            <span style="background:#fff;color:#4285F4;border-radius:3px;padding:1px 3px;font-size:.6rem;font-weight:900;border:1px solid #e0e0e0">G</span>
+          </span>
+        </small>
+      </div>
+    </div>
+    <button class="btn btn-success btn-full" id="btn-order" onclick="placeOrder()" disabled>Valider la commande</button>
+  </div>
+</div>
+
+<!-- ══ STAND ══════════════════════════════════════════════ -->
+<div id="screen-stand" style="display:none">
+  <header>
+    <button class="btn-back" onclick="goTo('home')">← Accueil</button>
+    <div class="logo">Caisse<span>Asso</span></div>
+    <span class="badge badge-stand">Stand</span>
+  </header>
+  <div class="container">
+    <div class="card">
+      <div class="fg">
+        <div class="f"><label>Événement</label><select id="stand-evt-sel" onchange="loadStandStands()"><option value="">— Événement —</option></select></div>
+        <div class="f"><label>Mon stand</label><select id="stand-stand-sel" onchange="renderStandOrders()"><option value="">— Stand —</option></select></div>
+      </div>
+    </div>
+    <div class="caisse-tabs">
+      <button class="caisse-tab active" id="stand-tab-active" onclick="standTab('active')">🍽️ Mon Stand</button>
+      <button class="caisse-tab" id="stand-tab-stock" onclick="standTab('stock')">📦 Mon Stock</button>
+      <button class="caisse-tab" id="stand-tab-transfer" onclick="standTab('transfer')">🔄 Transfert</button>
+      <button class="caisse-tab" id="stand-tab-cancelled" onclick="standTab('cancelled')">❌ Annulées <span id="stand-cancelled-badge"></span></button>
+    </div>
+    <div id="stand-orders-list"></div>
+  </div>
+</div>
+
+<!-- ══ CAISSE ═════════════════════════════════════════════ -->
+<div id="screen-caisse" style="display:none">
+  <header>
+    <button class="btn-back" onclick="goTo('home')">← Accueil</button>
+    <div class="logo">Caisse<span>Asso</span></div>
+    <span class="badge badge-caisse">Caisse</span>
+  </header>
+  <div class="container">
+    <div class="card" id="caisse-evt-card">
+      <div class="f"><label>Événement</label><select id="caisse-evt-sel" onchange="onCaisseEvtChange()"><option value="">— Événement —</option></select></div>
+    </div>
+    <div class="caisse-tabs">
+      <button class="caisse-tab active" onclick="caisseTab('pending')">⏳ En attente</button>
+      <button class="caisse-tab" onclick="caisseTab('done')">✅ Encaissées</button>
+      <button class="caisse-tab" onclick="caisseTab('history')">📋 Historique</button>
+    </div>
+    <div id="caisse-orders-list"></div>
+  </div>
+</div>
+
+<!-- MODAL EDIT ARTICLE -->
+<div class="overlay" id="modal-art">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Modifier l'article</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="fg full">
+      <div class="f"><label>Nom</label><input id="edit-name" type="text"></div>
+      <div class="f"><label>Prix (€)</label><input id="edit-price" type="number" step="0.5"></div>
+      <div class="f"><label>Stock</label><input id="edit-stock" type="number"></div>
+      <div class="f">
+        <label>Photo</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button type="button" class="btn btn-secondary btn-sm" style="flex:1" onclick="document.getElementById('edit-camera-input').click()">📷 Photo</button>
+          <button type="button" class="btn btn-secondary btn-sm" style="flex:1" onclick="document.getElementById('edit-photo-input').click()">🖼️ Fichier</button>
+        </div>
+        <input type="file" id="edit-camera-input" accept="image/*" capture="environment" onchange="previewPhoto(event,'edit-photo-preview','edit-upload-hint')" style="display:none">
+        <input type="file" id="edit-photo-input" accept="image/*" onchange="previewPhoto(event,'edit-photo-preview','edit-upload-hint')" style="display:none">
+        <div style="text-align:center">
+          <img id="edit-photo-preview" style="display:none;border-radius:8px;max-width:100px;margin-bottom:4px">
+          <div id="edit-upload-hint" style="font-size:.78rem;color:var(--ink-light)">Photo actuelle conservée si rien de sélectionné</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ══ STATE ══════════════════════════════════════════════════
+const DB = {
+  get events()    { return JSON.parse(localStorage.getItem('ca_events')    || '[]'); },
+  get stands()    { return JSON.parse(localStorage.getItem('ca_stands')    || '[]'); },
+  get articles()  { return JSON.parse(localStorage.getItem('ca_articles')  || '[]'); },
+  get orders()    { return JSON.parse(localStorage.getItem('ca_orders')    || '[]'); },
+  get transfers() { return JSON.parse(localStorage.getItem('ca_transfers') || '[]'); },
+  set events(v)   { localStorage.setItem('ca_events',    JSON.stringify(v)); },
+  set stands(v)   { localStorage.setItem('ca_stands',    JSON.stringify(v)); },
+  set articles(v) { localStorage.setItem('ca_articles',  JSON.stringify(v)); },
+  set orders(v)   { localStorage.setItem('ca_orders',    JSON.stringify(v)); },
+  set transfers(v){ localStorage.setItem('ca_transfers', JSON.stringify(v)); },
+};
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function orderNum() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const orders = DB.orders;
+  // Compter combien de commandes ont été passées dans cette même heure
+  const sameHour = orders.filter(o => {
+    const d = new Date(o.createdAt);
+    return d.getHours() === now.getHours() &&
+           d.getDate() === now.getDate() &&
+           d.getMonth() === now.getMonth();
+  }).length;
+  const seq = String(sameHour + 1).padStart(2,'0');
+  return hh + seq;
+}
+
+let selectedColor = '#5b4fcf';
+const COLORS = ['#5b4fcf','#e05c2a','#2db37a','#e8b600','#d63384','#0d9de0','#7c3aed','#059669'];
+let editingId = null;
+let cart = [];
+let selectedPayment = null;
+let currentClientEvt = null;
+let currentClientStand = null;
+let caisseCurrent = 'pending';
+
+// ══ NAVIGATION ═════════════════════════════════════════════
+let currentScreen = 'home';
+
+// ══ MOT DE PASSE ══════════════════════════════════════════
+let pwdTarget = null;
+
+function getDynamicPassword() {
+  const now = new Date();
+  const dd = String(now.getDate() + 10).padStart(2,'0');
+  const mm = String(now.getMonth() + 1 + 10).padStart(2,'0');
+  const hh = String(now.getHours()).padStart(2,'0');
+  return dd + mm + hh;
+}
+
+function askPassword(role) {
+  pwdTarget = role;
+  const labels = { admin:'Administration', stand:'Stand', caisse:'Caisse' };
+  document.getElementById('pwd-title').textContent = '🔒 ' + labels[role];
+  document.getElementById('pwd-input').value = '';
+  document.getElementById('pwd-error').style.display = 'none';
+  document.getElementById('modal-pwd').classList.add('open');
+  setTimeout(() => document.getElementById('pwd-input').focus(), 100);
+}
+
+function checkPassword() {
+  const entered = document.getElementById('pwd-input').value.trim();
+  if (entered === getDynamicPassword()) {
+    document.getElementById('modal-pwd').classList.remove('open');
+    const target = pwdTarget;
+    pwdTarget = null;
+    goTo(target);
+  } else {
+    document.getElementById('pwd-error').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+  }
+}
+
+function closePwdModal() {
+  document.getElementById('modal-pwd').classList.remove('open');
+  pwdTarget = null;
+}
+window.askPassword = askPassword;
+window.checkPassword = checkPassword;
+window.closePwdModal = closePwdModal;
+
+// ══ NAVIGATION ════════════════════════════════════════════
+function goTo(screen) {
+  currentScreen = screen;
+  ['home','admin','client','stand','caisse'].forEach(s =>
+    document.getElementById('screen-'+s).style.display = s === screen ? 'block' : 'none'
+  );
+  if (screen === 'home')   { document.getElementById('screen-home').style.display = 'flex'; hideCartBar(); stopBonPolling(); }
+  if (screen === 'admin')  { initSwatches(); renderEvents(); populateAdminSelects(); }
+  if (screen === 'client') { renderClientEvts(); cart=[]; selectedPayment=null; updateCartBar(); }
+  if (screen === 'stand')  { populateStandSelects(); }
+  if (screen === 'caisse') { populateCaisseSelects(); }}
+
+// ══ MODAL ══════════════════════════════════════════════════
+function closeModal() { document.getElementById('modal-art').classList.remove('open'); }
+
+// ══ ADMIN TABS ════════════════════════════════════════════
+function adminTab(name) {
+  ['events','stands','articles','orders'].forEach((t,i) => {
+    document.getElementById('atab-'+t).style.display = t===name?'block':'none';
+    document.querySelectorAll('#screen-admin .tab')[i].classList.toggle('active', t===name);
+  });
+  if (name==='stands')   populateAdminSelects();
+  if (name==='articles') populateAdminSelects();
+  if (name==='orders')   { populateAdminOrdersSelect(); renderAdminOrders(); }
+}
+
+// ══ SWATCHES ══════════════════════════════════════════════
+function initSwatches() {
+  const el = document.getElementById('swatches');
+  el.innerHTML = COLORS.map((c,i) =>
+    `<div class="swatch ${i===0?'selected':''}" style="background:${c}" data-c="${c}"></div>`
+  ).join('');
+  el.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+    selectedColor = s.dataset.c;
+    el.querySelectorAll('.swatch').forEach(x => x.classList.remove('selected'));
+    s.classList.add('selected');
+  }));
+}
+
+// ══ EVENTS ════════════════════════════════════════════════
+function addEvent() {
+  const name = document.getElementById('evt-name').value.trim();
+  const date = document.getElementById('evt-date').value;
+  const lieu = document.getElementById('evt-lieu').value.trim();
+  if (!name) { return; }
+  const evts = DB.events;
+  evts.unshift({ id: uid(), name, date, lieu, status: 'actif', createdAt: Date.now() });
+  DB.events = evts;
+  document.getElementById('evt-name').value = '';
+  document.getElementById('evt-date').value = '';
+  document.getElementById('evt-lieu').value = '';
+  renderEvents(); populateAdminSelects();
+}
+
+function deleteEvent(id) {
+  if (!confirm('Supprimer cet événement ?')) return;
+  DB.events   = DB.events.filter(e => e.id !== id);
+  DB.stands   = DB.stands.filter(s => s.eventId !== id);
+  DB.articles = DB.articles.filter(a => a.eventId !== id);
+  DB.orders   = DB.orders.filter(o => o.eventId !== id);
+  renderEvents(); populateAdminSelects();
+}
+
+function toggleStatus(id) {
+  const evts = DB.events;
+  const e = evts.find(e => e.id === id);
+  if (!e) return;
+  e.status = e.status === 'actif' ? 'clôturé' : 'actif';
+  DB.events = evts;
+  renderEvents();
+}
+
+function exportEvent(id, name) {
+  const orders = DB.orders.filter(o => o.eventId === id);
+  if (!orders.length) { return; }
+  const rows = [['N° Commande','Date/Heure','Stand','Article','Qté','Prix unit.','Sous-total','Paiement','Statut']];
+  orders.forEach(o => {
+    (o.items||[]).forEach(item => {
+      rows.push([
+        o.num, new Date(o.createdAt).toLocaleString('fr-FR'),
+        item.standName, item.name, item.qty,
+        item.price.toFixed(2), (item.price*item.qty).toFixed(2),
+        o.paymentMethod, o.status
+      ]);
+    });
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `ventes_${name.replace(/\s+/g,'_')}.csv`;
+  a.click();
+}
+
+function renderEvents() {
+  const el = document.getElementById('events-list');
+  const evts = DB.events;
+  if (!evts.length) { el.innerHTML = `<div class="empty"><div class="e">📅</div><p>Aucun événement.</p></div>`; return; }
+  el.innerHTML = evts.map(e => {
+    const d = e.date ? new Date(e.date+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : '';
+    const nbOrders = DB.orders.filter(o => o.eventId === e.id).length;
+    return `<div class="event-item">
+      <div>
+        <div class="event-name">${e.name}</div>
+        <div class="event-date">${d}${e.lieu?' · '+e.lieu:''}</div>
+        <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
+          <span class="pill ${e.status==='actif'?'pill-green':'pill-gray'}">${e.status}</span>
+          <span class="pill pill-blue">${nbOrders} commande${nbOrders>1?'s':''}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+        <button class="btn btn-sm btn-secondary" onclick="exportEvent('${e.id}','${e.name.replace(/'/g,"\\'")}')">📊 Export</button>
+        <button class="btn btn-sm btn-secondary" onclick="toggleStatus('${e.id}')">${e.status==='actif'?'Clôturer':'Réouvrir'}</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteEvent('${e.id}')">Supprimer</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ STANDS ════════════════════════════════════════════════
+// Présélectionne l'événement actif automatiquement.
+// Si un seul événement actif → select caché, présélectionné silencieusement.
+// Si plusieurs → select visible pour choisir.
+function autoSelectEvent(selId, labelId, onChange) {
+  const evts = DB.events.filter(e => e.status === 'actif');
+  const sel  = document.getElementById(selId);
+  const lbl  = labelId ? document.getElementById(labelId) : null;
+  if (!sel) return;
+  sel.innerHTML = `<option value="">— Sélectionner —</option>` +
+    evts.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+
+  if (evts.length === 1) {
+    sel.value = evts[0].id;
+    // Masquer le select si un seul événement actif
+    sel.closest('.f, .card, div').style.display = 'none';
+    if (onChange) onChange();
+  } else if (evts.length > 1) {
+    sel.closest('.f, .card, div').style.display = '';
+    // Présélectionner le plus récent
+    sel.value = evts[0].id;
+    if (onChange) onChange();
+  }
+}
+
+function populateAdminSelects() {
+  const evts = DB.events.filter(e => e.status === 'actif');
+  ['stands-evt','art-evt'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = `<option value="">— Sélectionner —</option>` +
+      evts.map(e => `<option value="${e.id}"${e.id===prev?' selected':''}>${e.name}</option>`).join('');
+    // Présélectionner si pas déjà sélectionné
+    if (!prev && evts.length >= 1) sel.value = evts[0].id;
+  });
+  // Masquer le select événement si un seul actif
+  ['stands-evt','art-evt'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const wrap = sel.closest('.f');
+    if (wrap) wrap.style.display = evts.length <= 1 ? 'none' : '';
+  });
+  renderStands();
+  loadArtStands();
+}
+
+function renderStands() {
+  const evtId = document.getElementById('stands-evt').value;
+  const formEl = document.getElementById('stands-form');
+  formEl.style.display = evtId ? 'block' : 'none';
+  const el = document.getElementById('stands-list');
+  if (!evtId) { el.innerHTML = ''; return; }
+  const stands = DB.stands.filter(s => s.eventId === evtId);
+  if (!stands.length) { el.innerHTML = `<div class="empty"><div class="e">🏪</div><p>Aucun stand.</p></div>`; return; }
+  el.innerHTML = `<div class="stands-grid">${stands.map(s => {
+    const cnt = DB.articles.filter(a => a.standId === s.id).length;
+    return `<div class="stand-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div class="stand-dot" style="background:${s.color}"></div>
+        <div><div class="stand-name">${s.name}</div><div class="stand-count">${cnt} article${cnt>1?'s':''}</div></div>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="deleteStand('${s.id}')">Supprimer</button>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function addStand() {
+  const evtId = document.getElementById('stands-evt').value;
+  const name  = document.getElementById('stand-name').value.trim();
+  if (!evtId || !name) { return; }
+  const stands = DB.stands;
+  stands.push({ id: uid(), eventId: evtId, name, color: selectedColor, createdAt: Date.now() });
+  DB.stands = stands;
+  document.getElementById('stand-name').value = '';
+  renderStands();
+}
+
+function deleteStand(id) {
+  if (!confirm('Supprimer ce stand ?')) return;
+  DB.stands   = DB.stands.filter(s => s.id !== id);
+  DB.articles = DB.articles.filter(a => a.standId !== id);
+  renderStands();
+}
+
+// ══ ARTICLES ══════════════════════════════════════════════
+function loadArtStands() {
+  const evtId = document.getElementById('art-evt').value;
+  const sel   = document.getElementById('art-stand');
+  sel.innerHTML = `<option value="">— Stand —</option>`;
+  document.getElementById('art-form').style.display = 'none';
+  document.getElementById('art-list-title').style.display = 'none';
+  document.getElementById('articles-list').innerHTML = '';
+  if (!evtId) return;
+  DB.stands.filter(s => s.eventId === evtId).forEach(s => {
+    sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+  });
+}
+
+function renderArticles() {
+  const standId = document.getElementById('art-stand').value;
+  document.getElementById('art-form').style.display = standId ? 'block' : 'none';
+  document.getElementById('art-list-title').style.display = standId ? 'flex' : 'none';
+  const el = document.getElementById('articles-list');
+  if (!standId) { el.innerHTML = ''; return; }
+  const arts = DB.articles.filter(a => a.standId === standId);
+  if (!arts.length) { el.innerHTML = `<div class="empty"><div class="e">🍽️</div><p>Aucun article.</p></div>`; return; }
+  el.innerHTML = arts.map(a => `
+    <div class="art-item">
+      ${a.photo ? `<div class="art-photo"><img src="${a.photo}"></div>` : `<div class="art-photo">🍽️</div>`}
+      <div style="flex:1">
+        <div class="art-name">${a.name}</div>
+        <div class="art-sub">Stock : ${a.stock}</div>
+      </div>
+      <div class="art-price">${parseFloat(a.price).toFixed(2)} €</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px">
+        <button class="btn btn-sm btn-secondary" onclick="editArticle('${a.id}')">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteArticle('${a.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function previewPhoto(e, previewId='photo-preview', hintId='upload-hint') {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX=600; let w=img.width, h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=h*MAX/w;w=MAX;}else{w=w*MAX/h;h=MAX;}}
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      window._photoData = c.toDataURL('image/jpeg',0.7);
+      const preview = document.getElementById(previewId);
+      preview.src = window._photoData;
+      preview.style.display = 'block';
+      document.getElementById(hintId).textContent = '✓ Photo sélectionnée';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addArticle() {
+  const standId = document.getElementById('art-stand').value;
+  const evtId   = document.getElementById('art-evt').value;
+  const name    = document.getElementById('art-name').value.trim();
+  const price   = parseFloat(document.getElementById('art-price').value);
+  const stock   = parseInt(document.getElementById('art-stock').value);
+  if (!standId||!name||isNaN(price)||isNaN(stock)) { return; }
+  const arts = DB.articles;
+  arts.push({ id: uid(), eventId: evtId, standId, name, price, stock, initialStock: stock, photo: window._photoData||null, createdAt: Date.now() });
+  DB.articles = arts;
+  document.getElementById('art-name').value='';
+  document.getElementById('art-price').value='';
+  document.getElementById('art-stock').value='';
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('upload-hint').textContent='Aucune photo sélectionnée';
+  document.getElementById('art-photo-input').value='';
+  document.getElementById('art-camera-input').value='';
+  window._photoData = null;
+  renderArticles();
+}
+
+function deleteArticle(id) {
+  if (!confirm('Supprimer ?')) return;
+  DB.articles = DB.articles.filter(a => a.id !== id);
+  renderArticles();
+}
+
+function editArticle(id) {
+  const a = DB.articles.find(a => a.id === id); if (!a) return;
+  editingId = id;
+  window._editPhotoData = null;
+  document.getElementById('edit-name').value  = a.name;
+  document.getElementById('edit-price').value = a.price;
+  document.getElementById('edit-stock').value = a.stock;
+  // Afficher photo actuelle
+  const prev = document.getElementById('edit-photo-preview');
+  const hint = document.getElementById('edit-upload-hint');
+  if (a.photo) {
+    prev.src = a.photo; prev.style.display = 'block';
+    hint.textContent = 'Photo actuelle — remplacer si besoin';
+  } else {
+    prev.style.display = 'none';
+    hint.textContent = 'Aucune photo — ajouter si besoin';
+  }
+  // Reset inputs
+  document.getElementById('edit-camera-input').value = '';
+  document.getElementById('edit-photo-input').value = '';
+  document.getElementById('modal-art').classList.add('open');
+}
+
+function saveEdit() {
+  const arts = DB.articles;
+  const a = arts.find(a => a.id === editingId); if (!a) return;
+  a.name  = document.getElementById('edit-name').value.trim() || a.name;
+  a.price = parseFloat(document.getElementById('edit-price').value) || a.price;
+  a.stock = parseInt(document.getElementById('edit-stock').value) ?? a.stock;
+  // Nouvelle photo si prise, sinon on garde l'ancienne
+  if (window._photoData) { a.photo = window._photoData; window._photoData = null; }
+  DB.articles = arts;
+  closeModal(); renderArticles();
+}
+
+// ══ CLIENT ════════════════════════════════════════════════
+function renderClientEvts() {
+  document.getElementById('client-evt-select').style.display = 'block';
+  document.getElementById('client-menu').style.display = 'none';
+  document.getElementById('client-confirm').style.display = 'none';
+  hideCartBar();
+  const evts = DB.events.filter(e => e.status === 'actif');
+  // Si un seul événement actif → ouvrir directement le menu
+  if (evts.length === 1) { openClientMenu(evts[0].id); return; }
+  const el = document.getElementById('client-evts-list');
+  if (!evts.length) { el.innerHTML = `<div class="empty"><div class="e">📅</div><p>Aucun événement actif.</p></div>`; return; }
+  el.innerHTML = evts.map(e => {
+    const d = e.date ? new Date(e.date+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) : '';
+    return `<div class="evt-card" onclick="openClientMenu('${e.id}')">
+      <div class="evt-card-name">${e.name}</div>
+      <div class="evt-card-date">${d}${e.lieu?' · '+e.lieu:''}</div>
+    </div>`;
+  }).join('');
+}
+
+function showClientEvtSelect() {
+  renderClientEvts();
+}
+
+function openClientMenu(evtId) {
+  currentClientEvt = evtId;
+  const evt = DB.events.find(e => e.id === evtId);
+  document.getElementById('client-evt-name').textContent = evt ? evt.name : '';
+  document.getElementById('client-evt-select').style.display = 'none';
+  document.getElementById('client-menu').style.display = 'block';
+  document.getElementById('client-confirm').style.display = 'none';
+
+  // Stands tabs
+  const stands = DB.stands.filter(s => s.eventId === evtId);
+  const tabsEl = document.getElementById('client-stands-tabs');
+  if (!stands.length) { tabsEl.innerHTML = ''; document.getElementById('client-menu-grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="e">🏪</div><p>Aucun stand disponible.</p></div>`; return; }
+
+  tabsEl.innerHTML =
+    `<div class="stand-tab active" data-sid="all" style="background:var(--accent);border-color:var(--accent);color:#fff" onclick="selectStandTab('all','var(--accent)',this)">🍽️ Tout</div>` +
+    stands.map(s =>
+      `<div class="stand-tab" data-sid="${s.id}" style="" onclick="selectStandTab('${s.id}','${s.color}',this)">${s.name}</div>`
+    ).join('');
+
+  currentClientStand = 'all';
+  renderMenuGrid('all');
+  updateCartBar();
+}
+
+function selectStandTab(standId, color, el) {
+  currentClientStand = standId;
+  document.querySelectorAll('.stand-tab').forEach(t => {
+    t.classList.remove('active');
+    t.style.background=''; t.style.borderColor=''; t.style.color='';
+  });
+  el.classList.add('active');
+  el.style.background = color; el.style.borderColor = color; el.style.color = '#fff';
+  renderMenuGrid(standId);
+}
+
+function renderMenuGrid(standId) {
+  const arts = standId === 'all'
+    ? DB.articles.filter(a => a.eventId === currentClientEvt)
+    : DB.articles.filter(a => a.standId === standId);
+  const el = document.getElementById('client-menu-grid');
+  if (!arts.length) { el.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="e">🍽️</div><p>Aucun article.</p></div>`; return; }
+  el.innerHTML = arts.map(a => {
+    const inCart = cart.find(c => c.id === a.id);
+    const qty = inCart ? inCart.qty : 0;
+    const oos    = a.stock <= 0;
+    const maxed  = qty >= a.stock;
+    const stand  = DB.stands.find(s => s.id === a.standId);
+    return `<div class="menu-card ${oos||maxed?'out-of-stock':''}" onclick="${oos||maxed?'':'addToCart(\''+a.id+'\')'}">
+      <div class="menu-card-img">
+        ${a.photo ? `<img src="${a.photo}">` : '🍽️'}
+      </div>
+      ${qty>0?`<div class="qty-badge">${qty}</div>`:''}
+      <div class="menu-card-body">
+        <div class="menu-card-name">${a.name}</div>
+        ${standId==='all' && stand ? `<div style="font-size:.7rem;font-weight:600;color:var(--ink-light);margin-bottom:2px">${stand.name}</div>` : ''}
+        <div class="menu-card-price">${parseFloat(a.price).toFixed(2)} €</div>
+        <div class="menu-card-stock" style="color:${oos||maxed?'var(--danger)':a.stock===1?'var(--warn)':'inherit'}">${oos||maxed?'Épuisé':a.stock===1?'⚠️ Dernier article':'Stock : '+a.stock}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addToCart(artId) {
+  const art = DB.articles.find(a => a.id === artId); if (!art) return;
+  const stand = DB.stands.find(s => s.id === art.standId);
+  const existing = cart.find(c => c.id === artId);
+  const qtyInCart = existing ? existing.qty : 0;
+  // Bloquer si stock dépassé
+  if (qtyInCart >= art.stock) return;
+  if (existing) { existing.qty++; }
+  else { cart.push({ id: artId, name: art.name, price: art.price, standId: art.standId, standName: stand?.name||'', qty: 1 }); }
+  updateCartBar();
+  renderMenuGrid(currentClientStand);
+}
+
+function updateCartBar() {
+  const total = cart.reduce((s,c) => s + c.price * c.qty, 0);
+  const count = cart.reduce((s,c) => s + c.qty, 0);
+  document.getElementById('cart-bar-total').textContent = total.toFixed(2) + ' €';
+  document.getElementById('cart-bar-count').textContent = count + ' article' + (count>1?'s':'');
+  const bar = document.getElementById('cart-bar');
+  if (count > 0) bar.classList.add('visible'); else bar.classList.remove('visible');
+}
+
+function hideCartBar() { document.getElementById('cart-bar').classList.remove('visible'); }
+
+function openCart() {
+  renderCartBody();
+  document.getElementById('cart-panel').classList.add('open');
+}
+function closeCart() { document.getElementById('cart-panel').classList.remove('open'); }
+
+function renderCartBody() {
+  const el = document.getElementById('cart-body');
+  if (!cart.length) { el.innerHTML = `<div class="empty"><div class="e">🛒</div><p>Panier vide.</p></div>`; return; }
+  el.innerHTML = cart.map(c => {
+    const art = DB.articles.find(a => a.id === c.id);
+    const maxQty = art ? art.stock : c.qty;
+    return `
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${c.name}</div>
+        <div class="cart-item-stand">${c.standName}</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty('${c.id}',-1)">−</button>
+        <div class="qty-val">${c.qty}</div>
+        <button class="qty-btn" onclick="changeQty('${c.id}',1)" ${c.qty >= maxQty ? 'disabled style="opacity:.35;cursor:not-allowed"' : ''}>+</button>
+      </div>
+      <div class="cart-item-price" style="margin-left:10px">${(c.price*c.qty).toFixed(2)} €</div>
+    </div>`;
+  }).join('');
+  const total = cart.reduce((s,c) => s+c.price*c.qty, 0);
+  document.getElementById('cart-total-price').textContent = total.toFixed(2) + ' €';
+}
+
+function changeQty(id, delta) {
+  const idx = cart.findIndex(c => c.id === id);
+  if (idx < 0) return;
+  if (delta > 0) {
+    const art = DB.articles.find(a => a.id === id);
+    if (art && cart[idx].qty >= art.stock) return; // bloquer au max du stock
+  }
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) cart.splice(idx, 1);
+  renderCartBody(); updateCartBar();
+  renderMenuGrid(currentClientStand);
+}
+
+function selectPayment(method) {
+  selectedPayment = method;
+  document.getElementById('pay-cash').classList.toggle('selected', method==='especes');
+  document.getElementById('pay-card').classList.toggle('selected', method==='carte');
+  document.getElementById('pay-online').classList.toggle('selected', method==='en_ligne');
+  document.getElementById('btn-order').disabled = false;
+}
+
+function placeOrder() {
+  if (!cart.length || !selectedPayment) return;
+
+  // Vérifier prénom
+  const prenom = document.getElementById('client-prenom').value.trim();
+  if (!prenom) {
+    document.getElementById('client-prenom').style.borderColor = 'var(--danger)';
+    document.getElementById('client-prenom').focus();
+    return;
+  }
+  document.getElementById('client-prenom').style.borderColor = '';
+  const contact = document.getElementById('client-contact').value.trim();
+
+  // Vérifier que l'événement est encore actif
+  const evt = DB.events.find(e => e.id === currentClientEvt);
+  if (!evt || evt.status !== 'actif') {
+    closeCart();
+    setTimeout(() => renderClientEvts(), 1500);
+    return;
+  }
+  const num = orderNum();
+  const orders = DB.orders;
+
+  // Décrémenter stock immédiatement à la commande (initialStock ne change jamais)
+  const arts = DB.articles;
+  cart.forEach(c => {
+    const a = arts.find(a => a.id === c.id);
+    if (a) {
+      // Figer initialStock au premier passage si pas encore défini
+      if (a.initialStock === undefined) a.initialStock = a.stock;
+      a.stock = Math.max(0, a.stock - c.qty);
+    }
+  });
+  DB.articles = arts;
+
+  const order = {
+    id: uid(), num, eventId: currentClientEvt,
+    prenom, contact,
+    items: cart.map(c => ({...c})),
+    paymentMethod: selectedPayment,
+    status: 'en_attente_caisse',
+    createdAt: Date.now()
+  };
+  orders.push(order);
+  DB.orders = orders;
+
+  // Si paiement en ligne → rediriger vers Stripe Checkout
+  if (selectedPayment === 'en_ligne') {
+    closeCart();
+    hideCartBar();
+    cart = []; selectedPayment = null;
+    redirectToStripe(order);
+    return;
+  }
+
+  closeCart();
+  hideCartBar();
+  document.getElementById('client-menu').style.display = 'none';
+  document.getElementById('client-confirm').style.display = 'block';
+
+  // Afficher le bon
+  showBon(order.id);
+  // Démarrer polling pour détecter le paiement
+  startBonPolling(order.id);
+
+  document.getElementById('client-prenom').value = '';
+  document.getElementById('client-contact').value = '';
+  cart = []; selectedPayment = null;
+}
+
+let bonPollingInterval = null;
+let currentOrderId = null;
+
+function showBon(orderId) {
+  currentOrderId = orderId;
+  updateBon(orderId);
+}
+
+function updateBon(orderId) {
+  const o = DB.orders.find(o => o.id === orderId);
+  if (!o) return;
+
+  const isPaid      = o.status === 'encaissé' || o.status === 'servi_complet';
+  const isCancelled = o.status === 'annulé';
+
+  document.getElementById('bon-order-num').textContent = '#' + o.num;
+  document.getElementById('bon-client-name').textContent = o.prenom ? '👤 ' + o.prenom + (o.contact ? '  ·  ' + o.contact : '') : '';
+
+  const banner = document.getElementById('bon-payment-banner');
+  banner.style.borderColor = isCancelled ? 'var(--danger)' : isPaid ? 'var(--success)' : 'var(--warn)';
+  banner.style.background  = isCancelled ? '#ffeaea' : isPaid ? '#e3f9f0' : '#fff8e0';
+
+  document.getElementById('bon-status-icon').textContent  = isCancelled ? '❌' : isPaid ? '✅' : '⏳';
+  document.getElementById('bon-status-title').textContent = isCancelled ? 'Commande annulée' : isPaid ? 'Commande payée !' : 'En attente de paiement';
+  document.getElementById('bon-status-sub').textContent   = isCancelled
+    ? 'Cette commande a été annulée. Veuillez vous rapprocher de la caisse.'
+    : isPaid
+    ? 'Présentez ce bon à chaque stand pour récupérer vos articles'
+    : 'Rendez-vous à la caisse pour régler — les stands préparent déjà';
+
+  const infoEl = document.getElementById('bon-payment-info');
+  if (isCancelled) {
+    infoEl.style.background = '#ffeaea';
+    infoEl.style.color      = 'var(--danger)';
+    infoEl.textContent      = '❌ Commande annulée — contactez la caisse';
+    stopBonPolling();
+  } else if (isPaid) {
+    infoEl.style.background = '#e3f9f0';
+    infoEl.style.color      = '#1a8a58';
+    infoEl.textContent      = '✅ Payé — montrez ce bon à chaque stand';
+  } else {
+    infoEl.style.background = '#fff8e0';
+    infoEl.style.color      = '#a07800';
+    infoEl.textContent      = o.paymentMethod === 'especes'
+      ? '💵 Paiement en espèces à la caisse'
+      : o.paymentMethod === 'en_ligne'
+      ? '📱 Paiement en ligne — CB, Google Pay, Apple Pay'
+      : '💳 Paiement par carte à la caisse (terminal SumUp)';
+  }
+
+  // Détail par stand
+  const byStand = {};
+  o.items.forEach(i => { if(!byStand[i.standName]) byStand[i.standName]=[]; byStand[i.standName].push(i); });
+  document.getElementById('bon-items').innerHTML = Object.entries(byStand).map(([stand, items]) =>
+    `<div class="order-stand-block" style="margin-bottom:12px">
+      <div class="order-stand-name" style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-light);margin-bottom:5px">🏪 ${stand}</div>
+      ${items.map(i=>`<div class="order-line" style="display:flex;justify-content:space-between;font-size:.9rem;padding:3px 0"><span>${i.name} × ${i.qty}</span><span style="font-weight:600">${(i.price*i.qty).toFixed(2)} €</span></div>`).join('')}
+    </div>`
+  ).join('');
+
+  const total = o.items.reduce((s,i)=>s+i.price*i.qty,0);
+  document.getElementById('bon-total').textContent = total.toFixed(2) + ' €';
+}
+
+function startBonPolling(orderId) {
+  stopBonPolling();
+  bonPollingInterval = setInterval(() => {
+    const o = DB.orders.find(o => o.id === orderId);
+    if (!o) return;
+    const wasPaid = document.getElementById('bon-status-icon').textContent === '✅';
+    const isPaid  = o.status === 'encaissé' || o.status === 'servi_complet';
+    if (isPaid && !wasPaid) {
+      // Notifier le client visuellement
+      updateBon(orderId);
+      // Vibration si supportée
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      stopBonPolling();
+    } else {
+      updateBon(orderId);
+    }
+  }, 1500);
+}
+
+function stopBonPolling() {
+  if (bonPollingInterval) { clearInterval(bonPollingInterval); bonPollingInterval = null; }
+}
+
+function newOrder() {
+  stopBonPolling();
+  openClientMenu(currentClientEvt);
+}
+
+// ══ STAND VIEW ════════════════════════════════════════════
+function populateStandSelects() {
+  const evts = DB.events.filter(e => e.status === 'actif');
+  const sel = document.getElementById('stand-evt-sel');
+  sel.innerHTML = `<option value="">— Événement —</option>` +
+    evts.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+  // Présélectionner si un seul actif
+  if (evts.length >= 1) sel.value = evts[0].id;
+  // Masquer si un seul
+  const wrap = sel.closest('.f');
+  if (wrap) wrap.style.display = evts.length <= 1 ? 'none' : '';
+  document.getElementById('stand-stand-sel').innerHTML = `<option value="">— Stand —</option>`;
+  document.getElementById('stand-orders-list').innerHTML = '';
+  if (evts.length >= 1) loadStandStands();
+}
+
+function loadStandStands() {
+  const evtId = document.getElementById('stand-evt-sel').value;
+  const sel   = document.getElementById('stand-stand-sel');
+  sel.innerHTML = `<option value="">— Stand —</option>`;
+  document.getElementById('stand-orders-list').innerHTML = '';
+  if (!evtId) return;
+  DB.stands.filter(s => s.eventId === evtId).forEach(s =>
+    sel.innerHTML += `<option value="${s.id}">${s.name}</option>`
+  );
+}
+
+let standCurrentTab = 'active';
+
+function standTab(tab) {
+  standCurrentTab = tab;
+  document.getElementById('stand-tab-active').classList.toggle('active', tab === 'active');
+  document.getElementById('stand-tab-stock').classList.toggle('active', tab === 'stock');
+  document.getElementById('stand-tab-transfer').classList.toggle('active', tab === 'transfer');
+  document.getElementById('stand-tab-cancelled').classList.toggle('active', tab === 'cancelled');
+  renderStandOrders();
+}
+
+function renderStandOrders() {
+  const standId = document.getElementById('stand-stand-sel').value;
+  const evtId   = document.getElementById('stand-evt-sel').value;
+  const el = document.getElementById('stand-orders-list');
+  if (!standId) { el.innerHTML=''; return; }
+
+  const allOrders = DB.orders.filter(o =>
+    o.eventId === evtId &&
+    o.items.some(i => i.standId === standId)
+  ).sort((a,b) => a.createdAt - b.createdAt);
+
+  // Badge annulées
+  const cancelledCount = allOrders.filter(o => o.status === 'annulé').length;
+  const badge = document.getElementById('stand-cancelled-badge');
+  if (badge) badge.textContent = cancelledCount > 0 ? ` (${cancelledCount})` : '';
+
+  if (standCurrentTab === 'cancelled') {
+    renderStandCancelled(el, allOrders, standId);
+  } else if (standCurrentTab === 'transfer') {
+    renderStandTransfer(el, standId, evtId);
+  } else if (standCurrentTab === 'stock') {
+    renderStandStock(el, standId);
+  } else {
+    renderStandActive(el, allOrders, standId);
+  }
+}
+
+function renderStandActive(el, allOrders, standId) {
+  const toPrepare = allOrders.filter(o =>
+    o.status !== 'annulé' &&
+    !(o.servedStands||[]).includes(standId)
+  );
+  const toDeliver = allOrders.filter(o =>
+    (o.status === 'encaissé' || o.status === 'servi_complet') &&
+    !(o.servedStands||[]).includes(standId)
+  );
+  const delivered = allOrders.filter(o =>
+    (o.servedStands||[]).includes(standId)
+  );
+
+  if (!toPrepare.length && !delivered.length) {
+    el.innerHTML=`<div class="empty"><div class="e">🍽️</div><p>Aucune commande pour ce stand.</p></div>`;
+    return;
+  }
+
+  const prepCount  = toPrepare.reduce((s,o) => s + o.items.filter(i=>i.standId===standId).reduce((ss,i)=>ss+i.qty,0), 0);
+  const delivCount = toDeliver.length;
+
+  el.innerHTML = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div style="background:var(--warn);border-radius:var(--radius);padding:12px;text-align:center">
+      <div style="font-size:1.6rem;font-weight:800">${prepCount}</div>
+      <div style="font-size:.75rem;font-weight:600">article${prepCount>1?'s':''} à préparer</div>
+    </div>
+    <div style="background:var(--success);color:#fff;border-radius:var(--radius);padding:12px;text-align:center">
+      <div style="font-size:1.6rem;font-weight:800">${delivCount}</div>
+      <div style="font-size:.75rem;font-weight:600">commande${delivCount>1?'s':''} à livrer</div>
+    </div>
+  </div>
+
+  <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--warn);margin-bottom:8px">
+    🔥 À préparer (${toPrepare.length})
+  </div>
+  ${toPrepare.length ? toPrepare.map(o => {
+    const items = o.items.filter(i => i.standId === standId);
+    const isPaid = o.status === 'encaissé' || o.status === 'servi_complet';
+    return `<div class="order-card" style="border-color:${isPaid?'var(--success)':'var(--border)'}">
+      <div class="order-card-header">
+        <div class="order-num">#${o.num}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="pill ${isPaid?'pill-green':'pill-gray'}">${isPaid?'✅ Payé':'⏳ Pas encore payé'}</span>
+          <div class="order-time">${new Date(o.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+      </div>
+      ${o.prenom ? `<div style="font-size:.85rem;font-weight:700;color:var(--accent);margin-bottom:8px">👤 ${o.prenom}</div>` : ''}
+      ${items.map(i=>`<div class="order-line-stand">
+        <div class="order-art-name">${i.name}</div>
+        <div style="font-weight:800;font-size:1.1rem">× ${i.qty}</div>
+      </div>`).join('')}
+      ${isPaid
+        ? `<button class="btn btn-success btn-full" style="margin-top:10px" onclick="markServed('${o.id}','${standId}')">📦 Livrer au client</button>`
+        : `<div style="background:#fff8e0;border-radius:8px;padding:8px 10px;margin-top:10px;font-size:.8rem;font-weight:600;color:#a07800;text-align:center">Préparez — attendez le paiement pour livrer</div>`
+      }
+    </div>`;
+  }).join('') : `<div class="empty" style="padding:20px"><div class="e">✅</div><p>Tout est préparé.</p></div>`}
+
+  ${delivered.length ? `
+  <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-light);margin:16px 0 8px">
+    ✅ Livrés (${delivered.length})
+  </div>
+  ${delivered.map(o => {
+    const items = o.items.filter(i => i.standId === standId);
+    return `<div class="order-card" style="opacity:.55">
+      <div class="order-card-header">
+        <div class="order-num" style="font-size:1rem">#${o.num}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${o.prenom ? `<span style="font-size:.8rem;font-weight:600;color:var(--accent)">👤 ${o.prenom}</span>` : ''}
+          <span class="pill pill-green">Livré</span>
+        </div>
+      </div>
+      ${items.map(i=>`<div class="order-line-stand"><div>${i.name}</div><div>× ${i.qty}</div></div>`).join('')}
+    </div>`;
+  }).join('')}` : ''}`;
+}
+
+function renderStandStock(el, standId) {
+  // Figer initialStock pour les articles sans initialStock
+  const allArts = DB.articles;
+  let fixed = false;
+  allArts.forEach(a => {
+    if (a.standId === standId && a.initialStock === undefined) {
+      a.initialStock = a.stock; fixed = true;
+    }
+  });
+  if (fixed) DB.articles = allArts;
+
+  const arts = DB.articles.filter(a => a.standId === standId);
+
+  if (!arts.length) {
+    el.innerHTML = `<div class="empty"><div class="e">📦</div><p>Aucun article configuré pour ce stand.</p></div>`;
+    return;
+  }
+
+  const totalStock = arts.reduce((s,a) => s + a.stock, 0);
+  const outOfStock = arts.filter(a => a.stock === 0).length;
+  const lowStock   = arts.filter(a => {
+    const initial = a.initialStock ?? a.stock;
+    return a.stock > 0 && a.stock <= Math.ceil(initial * 0.1);
+  }).length;
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      <div style="background:var(--accent-lt);border-radius:var(--radius);padding:12px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--accent)">${totalStock}</div>
+        <div style="font-size:.72rem;font-weight:600;color:var(--accent-dk)">total</div>
+      </div>
+      <div style="background:${lowStock?'#fff8e0':'#f0fdf4'};border-radius:var(--radius);padding:12px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:${lowStock?'var(--warn)':'var(--success)'}">${lowStock}</div>
+        <div style="font-size:.72rem;font-weight:600;color:${lowStock?'#a07800':'#1a8a58'}">faible stock</div>
+      </div>
+      <div style="background:${outOfStock?'#ffeaea':'#f0fdf4'};border-radius:var(--radius);padding:12px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:${outOfStock?'var(--danger)':'var(--success)'}">${outOfStock}</div>
+        <div style="font-size:.72rem;font-weight:600;color:${outOfStock?'var(--danger)':'#1a8a58'}">épuisé</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+        <thead>
+          <tr style="background:var(--accent-lt)">
+            <th style="padding:10px 14px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:var(--accent-dk)">Article</th>
+            <th style="padding:10px 14px;text-align:right;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:var(--accent-dk)">Prix</th>
+            <th style="padding:10px 14px;text-align:right;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:var(--accent-dk)">Initial</th>
+            <th style="padding:10px 14px;text-align:right;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:var(--accent-dk)">Vendu</th>
+            <th style="padding:10px 14px;text-align:right;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:var(--accent-dk)">Restant</th>
+            <th style="padding:10px 14px;text-align:center;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:var(--accent-dk)">État</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${arts.map((a,i) => {
+            const oos      = a.stock === 0;
+            const initial  = a.initialStock ?? a.stock;
+            const low      = a.stock > 0 && a.stock <= Math.ceil(initial * 0.1);
+            const icon     = oos ? '🔴' : low ? '🟡' : '🟢';
+            const label    = oos ? 'Épuisé' : low ? 'Faible' : 'OK';
+            const sold     = initial - a.stock;
+            return `<tr style="border-top:1px solid var(--border);${i%2===1?'background:#fafafa':''}">
+              <td style="padding:11px 14px;font-weight:600">${a.photo?`<img src="${a.photo}" style="width:28px;height:28px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle">`:''} ${a.name}</td>
+              <td style="padding:11px 14px;text-align:right;color:var(--ink-light)">${parseFloat(a.price).toFixed(2)} €</td>
+              <td style="padding:11px 14px;text-align:right;color:var(--ink-light)">${initial}</td>
+              <td style="padding:11px 14px;text-align:right;font-weight:700;color:${sold>0?'var(--accent)':'var(--ink-light)'}">${sold > 0 ? sold : '—'}</td>
+              <td style="padding:11px 14px;text-align:right;font-weight:800;font-size:1.05rem;color:${oos?'var(--danger)':low?'var(--warn)':'var(--ink)'}">${a.stock}</td>
+              <td style="padding:11px 14px;text-align:center;font-size:.78rem;font-weight:600;color:${oos?'var(--danger)':low?'#a07800':'var(--success)'}">${icon} ${label}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function renderStandTransfer(el, fromStandId, evtId) {
+  const stands = DB.stands.filter(s => s.eventId === evtId && s.id !== fromStandId);
+  const myArts = DB.articles.filter(a => a.standId === fromStandId && a.stock > 0);
+
+  if (!myArts.length) {
+    el.innerHTML = `<div class="empty"><div class="e">📦</div><p>Aucun article en stock à transférer.</p></div>`;
+    return;
+  }
+  if (!stands.length) {
+    el.innerHTML = `<div class="empty"><div class="e">🏪</div><p>Aucun autre stand disponible.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="card">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:14px">🔄 Transférer des articles</div>
+      <div class="f" style="margin-bottom:10px">
+        <label>Article à transférer</label>
+        <select id="tr-article" onchange="updateTransferMax()">
+          <option value="">— Choisir un article —</option>
+          ${myArts.map(a => `<option value="${a.id}" data-stock="${a.stock}">${a.name} (stock : ${a.stock})</option>`).join('')}
+        </select>
+      </div>
+      <div class="f" style="margin-bottom:10px">
+        <label>Quantité</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn btn-secondary" onclick="changeTransferQty(-1)" style="width:40px;height:40px;padding:0;font-size:1.2rem">−</button>
+          <input id="tr-qty" type="number" min="1" value="1" style="text-align:center;width:70px;font-size:1.1rem;font-weight:700">
+          <button class="btn btn-secondary" onclick="changeTransferQty(1)" style="width:40px;height:40px;padding:0;font-size:1.2rem">+</button>
+          <span id="tr-max-label" style="font-size:.78rem;color:var(--ink-light)"></span>
+        </div>
+      </div>
+      <div class="f" style="margin-bottom:10px">
+        <label>Stand destinataire</label>
+        <select id="tr-dest">
+          <option value="">— Choisir un stand —</option>
+          ${stands.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="f" style="margin-bottom:16px">
+        <label>Motif (optionnel)</label>
+        <input id="tr-motif" type="text" placeholder="Ex : rupture de stock, surplus…">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doTransfer('${fromStandId}','${evtId}')">✓ Confirmer le transfert</button>
+    </div>
+
+    <div id="tr-history"></div>`;
+
+  renderTransferHistory(fromStandId, evtId);
+}
+
+function updateTransferMax() {
+  const sel = document.getElementById('tr-article');
+  const opt = sel.options[sel.selectedIndex];
+  const stock = opt ? parseInt(opt.dataset.stock)||0 : 0;
+  document.getElementById('tr-max-label').textContent = stock ? `max ${stock}` : '';
+  const qty = document.getElementById('tr-qty');
+  if (parseInt(qty.value) > stock) qty.value = stock;
+}
+
+function changeTransferQty(delta) {
+  const input = document.getElementById('tr-qty');
+  const sel = document.getElementById('tr-article');
+  const opt = sel ? sel.options[sel.selectedIndex] : null;
+  const max = opt ? parseInt(opt.dataset.stock)||99 : 99;
+  let val = parseInt(input.value)||1;
+  val = Math.min(max, Math.max(1, val + delta));
+  input.value = val;
+}
+
+function doTransfer(fromStandId, evtId) {
+  const artId  = document.getElementById('tr-article').value;
+  const qty    = parseInt(document.getElementById('tr-qty').value)||0;
+  const destId = document.getElementById('tr-dest').value;
+  const motif  = document.getElementById('tr-motif').value.trim();
+
+  if (!artId)  { alert('Choisissez un article.'); return; }
+  if (!destId) { alert('Choisissez un stand destinataire.'); return; }
+  if (qty < 1) { alert('Quantité invalide.'); return; }
+
+  const arts = DB.articles;
+  const src  = arts.find(a => a.id === artId);
+  if (!src || src.stock < qty) { alert('Stock insuffisant.'); return; }
+
+  // Chercher si l'article existe déjà dans le stand destinataire
+  let dst = arts.find(a => a.standId === destId && a.name === src.name && a.eventId === evtId);
+
+  // Décrémenter source
+  src.stock -= qty;
+  if (src.initialStock !== undefined) src.initialStock -= qty;
+
+  // Incrémenter ou créer dans destination
+  if (dst) {
+    dst.stock += qty;
+    if (dst.initialStock !== undefined) dst.initialStock += qty;
+    else dst.initialStock = dst.stock;
+  } else {
+    arts.push({
+      id: uid(), eventId: evtId, standId: destId,
+      name: src.name, price: src.price, stock: qty,
+      initialStock: qty,
+      photo: src.photo || null, createdAt: Date.now()
+    });
+  }
+  DB.articles = arts;
+
+  // Historique transferts
+  const transfers = DB.transfers || [];
+  const destStand = DB.stands.find(s => s.id === destId);
+  const fromStand = DB.stands.find(s => s.id === fromStandId);
+  transfers.unshift({
+    id: uid(), date: Date.now(),
+    fromStandId, fromStandName: fromStand?.name||'',
+    destStandId: destId, destStandName: destStand?.name||'',
+    artName: src.name, qty, motif
+  });
+  DB.transfers = transfers;
+
+  renderStandOrders();
+}
+
+function renderTransferHistory(fromStandId, evtId) {
+  const el = document.getElementById('tr-history');
+  if (!el) return;
+  const transfers = (DB.transfers||[]).filter(t =>
+    t.fromStandId === fromStandId || t.destStandId === fromStandId
+  );
+  if (!transfers.length) return;
+  el.innerHTML = `
+    <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-light);margin:16px 0 8px">
+      📋 Historique des transferts
+    </div>
+    ${transfers.map(t => {
+      const d = new Date(t.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      const isSent = t.fromStandId === fromStandId;
+      return `<div class="card" style="padding:12px;margin-bottom:8px;border-left:3px solid ${isSent?'var(--danger)':'var(--success)'}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">${isSent?'↑ Envoyé':'↓ Reçu'} — ${t.artName} × ${t.qty}</div>
+          <span style="font-size:.75rem;color:var(--ink-light)">${d}</span>
+        </div>
+        <div style="font-size:.8rem;color:var(--ink-light);margin-top:3px">
+          ${isSent?`→ ${t.destStandName}`:`← ${t.fromStandName}`}
+          ${t.motif?` · ${t.motif}`:''}
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+window.updateTransferMax = updateTransferMax;
+window.changeTransferQty = changeTransferQty;
+window.doTransfer = doTransfer;
+
+function renderStandCancelled(el, allOrders, standId) {
+  const cancelled = allOrders.filter(o => o.status === 'annulé');
+
+  if (!cancelled.length) {
+    el.innerHTML=`<div class="empty"><div class="e">✅</div><p>Aucune commande annulée.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = cancelled.map(o => {
+    const items = o.items.filter(i => i.standId === standId);
+    const cancelledAt = o.cancelledAt ? new Date(o.cancelledAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="order-card" style="border-color:var(--danger);background:#fff8f8">
+      <div class="order-card-header">
+        <div class="order-num" style="color:var(--danger)">#${o.num}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${o.prenom ? `<span style="font-size:.8rem;font-weight:600;color:var(--accent)">👤 ${o.prenom}</span>` : ''}
+          <span class="pill" style="background:#ffeaea;color:var(--danger)">❌ Annulée</span>
+          ${cancelledAt ? `<span style="font-size:.75rem;color:var(--ink-light)">${cancelledAt}</span>` : ''}
+        </div>
+      </div>
+      ${items.map(i=>`<div class="order-line-stand">
+        <div class="order-art-name">${i.name}</div>
+        <div style="font-weight:700;color:var(--danger)">× ${i.qty} — stock restitué</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function markServed(orderId, standId) {
+  const orders = DB.orders;
+  const o = orders.find(o => o.id === orderId); if (!o) return;
+  if (!o.servedStands) o.servedStands = [];
+  if (!o.servedStands.includes(standId)) o.servedStands.push(standId);
+  // Si tous les stands servis → complet
+  const orderStands = [...new Set(o.items.map(i => i.standId))];
+  if (orderStands.every(s => o.servedStands.includes(s))) o.status = 'servi_complet';
+  DB.orders = orders;
+  renderStandOrders();
+}
+
+// ══ CAISSE ════════════════════════════════════════════════
+function onCaisseEvtChange() { renderCaisseOrders(); }
+
+function populateCaisseSelects() {
+  const evts = DB.events.filter(e => e.status === 'actif');
+  const sel = document.getElementById('caisse-evt-sel');
+  sel.innerHTML = `<option value="">— Événement —</option>` +
+    evts.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+  // Présélectionner si un seul actif
+  if (evts.length >= 1) sel.value = evts[0].id;
+  // Masquer si un seul
+  const wrap = sel.closest('.f');
+  if (wrap) wrap.style.display = evts.length <= 1 ? 'none' : '';
+  if (evts.length >= 1) renderCaisseOrders();
+  else document.getElementById('caisse-orders-list').innerHTML = '';
+}
+
+function caisseTab(tab) {
+  caisseCurrent = tab;
+  document.querySelectorAll('.caisse-tabs .caisse-tab').forEach((t,i) =>
+    t.classList.toggle('active', (i===0&&tab==='pending')||(i===1&&tab==='done')||(i===2&&tab==='history'))
+  );
+  renderCaisseOrders();
+}
+
+function renderCaisseOrders() {
+  const evtId = document.getElementById('caisse-evt-sel').value;
+  const el = document.getElementById('caisse-orders-list');
+  if (!evtId) { el.innerHTML=''; return; }
+
+  if (caisseCurrent === 'history') {
+    renderHistoryTable(evtId, el);
+    return;
+  }
+
+  const orders = DB.orders.filter(o => {
+    if (o.eventId !== evtId) return false;
+    if (caisseCurrent === 'pending') return o.status === 'en_attente_caisse';
+    return o.status === 'encaissé' || o.status === 'servi_complet';
+  }).sort((a,b) => a.createdAt - b.createdAt);
+
+  if (!orders.length) {
+    el.innerHTML = `<div class="empty"><div class="e">${caisseCurrent==='pending'?'✅':'📋'}</div><p>${caisseCurrent==='pending'?'Aucune commande en attente.':'Aucune commande encaissée.'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = orders.map(o => {
+    const total = o.items.reduce((s,i)=>s+i.price*i.qty,0);
+    const byStand = {};
+    o.items.forEach(i => { if(!byStand[i.standName]) byStand[i.standName]=[]; byStand[i.standName].push(i); });
+    return `<div class="order-card">
+      <div class="order-card-header">
+        <div>
+          <div class="order-num">#${o.num}</div>
+          ${o.prenom ? `<div style="font-size:.82rem;font-weight:700;color:var(--accent)">👤 ${o.prenom}${o.contact?' · '+o.contact:''}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="pill ${o.paymentMethod==='especes'?'pill-warn':o.paymentMethod==='en_ligne'?'pill-green':'pill-blue'}">${o.paymentMethod==='especes'?'💵 Espèces':o.paymentMethod==='en_ligne'?'📱 En ligne':'💳 Carte'}</span>
+          <div class="order-time">${new Date(o.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+      </div>
+      ${Object.entries(byStand).map(([stand,items])=>`
+        <div style="font-size:.74rem;font-weight:700;color:var(--ink-light);text-transform:uppercase;margin-top:8px;margin-bottom:4px">${stand}</div>
+        ${items.map(i=>`<div class="order-line-stand"><span class="order-art-name">${i.name} × ${i.qty}</span><span style="font-weight:600">${(i.price*i.qty).toFixed(2)} €</span></div>`).join('')}
+      `).join('')}
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1rem;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+        <span>Total</span><span style="color:var(--accent)">${total.toFixed(2)} €</span>
+      </div>
+      ${caisseCurrent==='pending'
+        ? `<div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-success" style="flex:1" onclick="encaisser('${o.id}')">✓ Encaisser</button>
+            <button class="btn btn-danger" style="flex:1" id="cbtn-cancel-${o.id}" onclick="showCaisseCancel('${o.id}')">✕ Annuler</button>
+           </div>
+           <div id="cconfirm-${o.id}" style="display:none;margin-top:8px;background:#ffeaea;border-radius:8px;padding:10px;text-align:center">
+             <div style="font-size:.85rem;font-weight:600;margin-bottom:8px">Confirmer l'annulation ?</div>
+             <div style="display:flex;gap:8px">
+               <button class="btn btn-danger" style="flex:1" onclick="caisseAnnuler('${o.id}')">Oui, annuler</button>
+               <button class="btn btn-secondary" style="flex:1" onclick="hideCaisseCancel('${o.id}')">Non</button>
+             </div>
+           </div>`
+        : ''}
+    </div>`;
+  }).join('');
+}
+
+function encaisser(orderId) {
+  const orders = DB.orders;
+  const o = orders.find(o => o.id === orderId); if (!o) return;
+  o.status = 'encaissé';
+  o.paidAt = Date.now();
+  DB.orders = orders;
+  renderCaisseOrders();
+}
+
+function showCaisseCancel(orderId) {
+  document.getElementById('cconfirm-'+orderId).style.display = 'block';
+  document.getElementById('cbtn-cancel-'+orderId).style.display = 'none';
+}
+
+function hideCaisseCancel(orderId) {
+  const el = document.getElementById('cconfirm-'+orderId);
+  if (el) el.style.display = 'none';
+  const btn = document.getElementById('cbtn-cancel-'+orderId);
+  if (btn) btn.style.display = '';
+}
+
+function caisseAnnuler(orderId) {
+  const orders = DB.orders;
+  const o = orders.find(o => o.id === orderId); if (!o) return;
+  const arts = DB.articles;
+  o.items.forEach(item => {
+    const a = arts.find(a => a.id === item.id);
+    if (a) a.stock += item.qty;
+  });
+  DB.articles = arts;
+  o.status = 'annulé';
+  o.cancelledAt = Date.now();
+  DB.orders = orders;
+  renderCaisseOrders();
+}
+
+// ══ ADMIN COMMANDES ═══════════════════════════════════════
+let adminOrdersFilter = 'pending';
+
+function populateAdminOrdersSelect() {
+  const evts = DB.events.filter(e => e.status === 'actif');
+  const sel = document.getElementById('admin-orders-evt');
+  const prev = sel.value;
+  sel.innerHTML = `<option value="">— Sélectionner —</option>` +
+    evts.map(e => `<option value="${e.id}"${e.id===prev?' selected':''}>${e.name}</option>`).join('');
+  // Présélectionner si pas déjà sélectionné
+  if (!prev && evts.length >= 1) sel.value = evts[0].id;
+  // Masquer si un seul actif
+  const wrap = sel.closest('.f');
+  if (wrap) wrap.style.display = evts.length <= 1 ? 'none' : '';
+}
+
+function adminOrdersTab(tab) {
+  adminOrdersFilter = tab;
+  document.querySelectorAll('#admin-orders-tabs .caisse-tab').forEach((t,i) =>
+    t.classList.toggle('active', (i===0&&tab==='pending')||(i===1&&tab==='done')||(i===2&&tab==='history'))
+  );
+  renderAdminOrders();
+}
+
+function renderAdminOrders() {
+  const evtId = document.getElementById('admin-orders-evt').value;
+  const el = document.getElementById('admin-orders-list');
+  if (!evtId) { el.innerHTML = `<div class="empty"><div class="e">📅</div><p>Sélectionnez un événement.</p></div>`; return; }
+
+  if (adminOrdersFilter === 'history') {
+    renderHistoryTable(evtId, el);
+    return;
+  }
+
+  const orders = DB.orders.filter(o => {
+    if (o.eventId !== evtId) return false;
+    if (adminOrdersFilter === 'pending') return o.status === 'en_attente_caisse';
+    return o.status === 'encaissé' || o.status === 'servi_complet';
+  }).sort((a,b) => a.createdAt - b.createdAt);
+
+  if (!orders.length) {
+    el.innerHTML = `<div class="empty"><div class="e">${adminOrdersFilter==='pending'?'✅':'📋'}</div><p>${adminOrdersFilter==='pending'?'Aucune commande en attente.':'Aucune commande encaissée.'}</p></div>`;
+    return;
+  }
+
+  const total = orders.reduce((s,o) => s + o.items.reduce((ss,i) => ss+i.price*i.qty, 0), 0);
+
+  el.innerHTML = (adminOrdersFilter==='pending' ? `
+    <div class="card" style="background:var(--accent);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:.8rem;opacity:.8">${orders.length} commande${orders.length>1?'s':''} en attente</div>
+      <div style="font-size:1.3rem;font-weight:800">${total.toFixed(2)} €</div></div>
+      <div style="font-size:2rem">⏳</div>
+    </div>` : '') +
+
+  orders.map(o => {
+    const tot = o.items.reduce((s,i)=>s+i.price*i.qty,0);
+    // Grouper par stand
+    const byStand = {};
+    o.items.forEach(i => { if(!byStand[i.standId]) byStand[i.standId]={name:i.standName,items:[]}; byStand[i.standId].items.push(i); });
+    const standIds = Object.keys(byStand);
+    const servedStands = o.servedStands || [];
+    const servedCount = standIds.filter(s => servedStands.includes(s)).length;
+
+    return `<div class="order-card" style="border-color:${o.status==='en_attente_caisse'?'var(--warn)':'var(--success)'}">
+      <div class="order-card-header">
+        <div>
+          <div class="order-num">#${o.num}</div>
+          ${o.prenom ? `<div style="font-size:.82rem;font-weight:700;color:var(--accent)">👤 ${o.prenom}${o.contact?' · '+o.contact:''}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="pill ${o.paymentMethod==='especes'?'pill-warn':o.paymentMethod==='en_ligne'?'pill-green':'pill-blue'}">${o.paymentMethod==='especes'?'💵 Espèces':o.paymentMethod==='en_ligne'?'📱 En ligne':'💳 Carte'}</span>
+          <div class="order-time">${new Date(o.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+      </div>
+
+      ${standIds.map(sid => {
+        const s = byStand[sid];
+        const isServed = servedStands.includes(sid);
+        return `<div style="margin-top:10px;padding:10px;background:${isServed?'#e3f9f0':'#fff8e0'};border-radius:8px;">
+          <div style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;justify-content:space-between">
+            <span>🏪 ${s.name}</span>
+            <span style="color:${isServed?'var(--success)':'var(--warn)'}">${isServed?'✅ Servi':'⏳ En préparation'}</span>
+          </div>
+          ${s.items.map(i=>`<div class="order-line-stand"><span>${i.name} × ${i.qty}</span><span style="font-weight:600">${(i.price*i.qty).toFixed(2)} €</span></div>`).join('')}
+        </div>`;
+      }).join('')}
+
+      <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+        <span>Total · ${servedCount}/${standIds.length} stand${standIds.length>1?'s':''} servis</span>
+        <span style="color:var(--accent)">${tot.toFixed(2)} €</span>
+      </div>
+      ${o.status==='en_attente_caisse'
+        ? `<div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-success" style="flex:1" onclick="adminEncaisser('${o.id}')">✓ Encaisser</button>
+            <button class="btn btn-danger" style="flex:1" id="btn-cancel-${o.id}" onclick="showCancelConfirm('${o.id}')">✕ Annuler</button>
+           </div>
+           <div id="confirm-${o.id}" style="display:none;margin-top:8px;background:#ffeaea;border-radius:8px;padding:10px;text-align:center">
+             <div style="font-size:.85rem;font-weight:600;margin-bottom:8px">Confirmer l'annulation ?</div>
+             <div style="display:flex;gap:8px">
+               <button class="btn btn-danger" style="flex:1" onclick="cancelOrder('${o.id}')">Oui, annuler</button>
+               <button class="btn btn-secondary" style="flex:1" onclick="hideCancelConfirm('${o.id}')">Non</button>
+             </div>
+           </div>`
+        : `<div style="text-align:center;color:var(--success);font-size:.82rem;font-weight:600;margin-top:8px">✅ Encaissé${o.paidAt?' à '+new Date(o.paidAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):''}</div>`}
+    </div>`;
+  }).join('');
+}
+
+function renderHistoryTable(evtId, el) {
+  const orders = DB.orders
+    .filter(o => o.eventId === evtId)
+    .sort((a,b) => b.createdAt - a.createdAt);
+
+  if (!orders.length) {
+    el.innerHTML = `<div class="empty"><div class="e">📋</div><p>Aucune commande enregistrée.</p></div>`;
+    return;
+  }
+
+  const statusLabel = s => {
+    if (s === 'en_attente_caisse') return `<span class="pill pill-warn">⏳ En attente</span>`;
+    if (s === 'encaissé')          return `<span class="pill pill-green">✅ Encaissée</span>`;
+    if (s === 'servi_complet')     return `<span class="pill pill-green">✅ Servie</span>`;
+    if (s === 'annulé')            return `<span class="pill" style="background:#ffeaea;color:var(--danger)">❌ Annulée</span>`;
+    return `<span class="pill pill-gray">${s}</span>`;
+  };
+
+  const totalAll = orders
+    .filter(o => o.status !== 'annulé')
+    .reduce((s,o) => s + o.items.reduce((ss,i)=>ss+i.price*i.qty,0), 0);
+
+  el.innerHTML = `
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:.85rem;color:var(--ink-light)">${orders.length} commande${orders.length>1?'s':''} au total</div>
+      <div style="font-weight:800;font-size:1.1rem;color:var(--accent)">${totalAll.toFixed(2)} €</div>
+    </div>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:.85rem;background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)">
+      <thead>
+        <tr style="background:var(--accent-lt);color:var(--accent-dk)">
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">N°</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Prénom</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Heure</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Paiement</th>
+          <th style="padding:10px 12px;text-align:right;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Total</th>
+          <th style="padding:10px 12px;text-align:center;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${orders.map((o,idx) => {
+          const total = o.items.reduce((s,i)=>s+i.price*i.qty,0);
+          const heure = new Date(o.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+          const isCancelled = o.status === 'annulé';
+          return `<tr style="border-top:1px solid var(--border);${isCancelled?'opacity:.55':''}${idx%2===0?'':'background:#fafafa'}">
+            <td style="padding:10px 12px;font-weight:700;color:var(--accent)">#${o.num}</td>
+            <td style="padding:10px 12px;font-weight:600">${o.prenom||'—'}${o.contact?`<div style="font-size:.72rem;color:var(--ink-light)">${o.contact}</div>`:''}</td>
+            <td style="padding:10px 12px;color:var(--ink-light)">${heure}</td>
+            <td style="padding:10px 12px">${o.paymentMethod==='especes'?'💵 Espèces':o.paymentMethod==='en_ligne'?'📱 En ligne':'💳 Carte'}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:700;${isCancelled?'text-decoration:line-through;color:var(--ink-light)':'color:var(--accent)'}">${total.toFixed(2)} €</td>
+            <td style="padding:10px 12px;text-align:center">${statusLabel(o.status)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>`;
+}
+
+window.renderHistoryTable = renderHistoryTable;
+
+function adminEncaisser(orderId) {
+  const orders = DB.orders;
+  const o = orders.find(o => o.id === orderId); if (!o) return;
+  o.status = 'encaissé';
+  o.paidAt = Date.now();
+  DB.orders = orders;
+  renderAdminOrders();
+}
+
+function showCancelConfirm(orderId) {
+  document.getElementById('confirm-'+orderId).style.display = 'block';
+  document.getElementById('btn-cancel-'+orderId).style.display = 'none';
+}
+
+function hideCancelConfirm(orderId) {
+  const el = document.getElementById('confirm-'+orderId);
+  if (el) el.style.display = 'none';
+  const btn = document.getElementById('btn-cancel-'+orderId);
+  if (btn) btn.style.display = '';
+}
+
+function cancelOrder(orderId) {
+  const orders = DB.orders;
+  const o = orders.find(o => o.id === orderId); if (!o) return;
+  const arts = DB.articles;
+  o.items.forEach(item => {
+    const a = arts.find(a => a.id === item.id);
+    if (a) a.stock += item.qty;
+  });
+  DB.articles = arts;
+  o.status = 'annulé';
+  o.cancelledAt = Date.now();
+  DB.orders = orders;
+  renderAdminOrders();
+}
+window.cancelOrder = cancelOrder;
+window.showCancelConfirm = showCancelConfirm;
+window.hideCancelConfirm = hideCancelConfirm;
+window.showCaisseCancel = showCaisseCancel;
+window.hideCaisseCancel = hideCaisseCancel;
+window.caisseAnnuler = caisseAnnuler;
+window.adminEncaisser = adminEncaisser;
+window.adminOrdersTab = adminOrdersTab;
+window.renderAdminOrders = renderAdminOrders;
+window.encaisser = encaisser;
+window.renderCaisseOrders = renderCaisseOrders;
+window.caisseTab = caisseTab;
+window.onCaisseEvtChange = onCaisseEvtChange;
+window.markServed = markServed;
+window.standTab = standTab;
+window.renderStandOrders = renderStandOrders;
+window.loadStandStands = loadStandStands;
+window.selectStandTab = selectStandTab;
+window.openClientMenu = openClientMenu;
+window.showClientEvtSelect = showClientEvtSelect;
+window.openCart = openCart;
+window.closeCart = closeCart;
+window.changeQty = changeQty;
+window.selectPayment = selectPayment;
+window.placeOrder = placeOrder;
+window.newOrder = newOrder;
+window.addEvent = addEvent;
+window.deleteEvent = deleteEvent;
+window.toggleStatus = toggleStatus;
+window.exportEvent = exportEvent;
+window.adminTab = adminTab;
+window.addStand = addStand;
+window.deleteStand = deleteStand;
+window.renderStands = renderStands;
+window.loadArtStands = loadArtStands;
+window.renderArticles = renderArticles;
+window.addArticle = addArticle;
+window.deleteArticle = deleteArticle;
+window.editArticle = editArticle;
+window.saveEdit = saveEdit;
+window.closeModal = closeModal;
+window.previewPhoto = previewPhoto;
+window.goTo = goTo;
+
+// ══ STRIPE PAIEMENT EN LIGNE ══════════════════════════════
+async function redirectToStripe(order) {
+  // Afficher un message d'attente
+  document.getElementById('client-menu').style.display = 'none';
+  document.getElementById('client-confirm').style.display = 'block';
+  document.getElementById('bon-order-num').textContent = '#' + order.num;
+  document.getElementById('bon-status-icon').textContent = '⏳';
+  document.getElementById('bon-status-title').textContent = 'Redirection vers le paiement...';
+  document.getElementById('bon-status-sub').textContent = 'Vous allez être redirigé vers la page de paiement sécurisée';
+
+  try {
+    const siteUrl = window.location.origin + window.location.pathname;
+    const resp = await fetch('/.netlify/functions/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: order.items,
+        orderId: order.id,
+        orderNum: order.num,
+        siteUrl: siteUrl,
+      }),
+    });
+
+    if (!resp.ok) throw new Error('Erreur serveur');
+    const data = await resp.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error('Pas de lien de paiement');
+    }
+  } catch (err) {
+    console.error('Stripe redirect error:', err);
+    document.getElementById('bon-status-icon').textContent = '❌';
+    document.getElementById('bon-status-title').textContent = 'Erreur de paiement';
+    document.getElementById('bon-status-sub').textContent = 'Le paiement en ligne n\'est pas disponible. Rendez-vous à la caisse.';
+  }
+}
+
+// Gérer le retour de Stripe (success ou cancel)
+function handleStripeReturn() {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get('payment_success') === 'true') {
+    const orderId = params.get('order_id');
+    if (orderId) {
+      const orders = DB.orders;
+      const o = orders.find(o => o.id === orderId);
+      if (o && o.status === 'en_attente_caisse') {
+        o.status = 'encaissé';
+        o.paidAt = Date.now();
+        DB.orders = orders;
+      }
+      // Afficher le bon payé
+      goTo('client');
+      document.getElementById('client-menu').style.display = 'none';
+      document.getElementById('client-confirm').style.display = 'block';
+      showBon(orderId);
+    }
+    // Nettoyer l'URL
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  if (params.get('payment_cancel') === 'true') {
+    const orderId = params.get('order_id');
+    if (orderId) {
+      goTo('client');
+      document.getElementById('client-menu').style.display = 'none';
+      document.getElementById('client-confirm').style.display = 'block';
+      showBon(orderId);
+      startBonPolling(orderId);
+    }
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+// ── INIT
+handleStripeReturn();
+goTo('home');
+</script>
+</body>
+</html>
