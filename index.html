@@ -262,6 +262,10 @@ textarea{resize:vertical;min-height:60px;}
 
   <div class="home-logo">Caisse<span>Asso</span></div>
   <div class="home-subtitle">Choisissez votre rôle</div>
+  <button class="role-btn" id="btn-billetterie" onclick="goTo('billetterie')" style="display:none;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;max-width:340px">
+    <div class="role-icon" style="background:rgba(255,255,255,.25)">🎫</div>
+    <div class="role-text"><div class="role-name">Billetterie</div><div class="role-desc">Réserver vos billets pour l'événement</div></div>
+  </button>
   <button class="role-btn btn-client" onclick="goTo('client')">
     <div class="role-icon" style="background:rgba(255,255,255,.2)">🛒</div>
     <div class="role-text"><div class="role-name">🍴 Découvrir le menu</div><div class="role-desc">Parcourir le menu et passer commande</div></div>
@@ -343,6 +347,10 @@ textarea{resize:vertical;min-height:60px;}
           <div class="f s2"><label>Nom</label><input id="evt-name" type="text" placeholder="ex : TILY du 26 juin"></div>
           <div class="f"><label>Date</label><input id="evt-date" type="date"></div>
           <div class="f"><label>Lieu</label><input id="evt-lieu" type="text" placeholder="ex : Salle paroissiale"></div>
+        </div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="evt-billetterie" style="width:18px;height:18px;accent-color:var(--accent)">
+          <label for="evt-billetterie" style="font-size:.88rem;font-weight:600;cursor:pointer">🎫 Avec billetterie</label>
         </div>
         <div style="margin-top:14px"><button class="btn btn-primary" onclick="addEvent()">Créer l'événement</button></div>
       </div>
@@ -528,6 +536,22 @@ textarea{resize:vertical;min-height:60px;}
   </div>
 </div>
 
+<!-- ══ BILLETTERIE (à développer) ═══════════════════════════ -->
+<div id="screen-billetterie" style="display:none">
+  <header>
+    <button class="btn-back" onclick="goTo('home')">← Accueil</button>
+    <div class="logo">Caisse<span>Asso</span></div>
+    <span class="badge" style="background:#f3e8ff;color:#7c3aed">Billetterie</span>
+  </header>
+  <div class="container">
+    <div class="empty" style="margin-top:40px">
+      <div class="e">🎫</div>
+      <p style="font-size:1.1rem;font-weight:600">Billetterie</p>
+      <p style="color:var(--ink-light)">Ce service sera bientôt disponible.</p>
+    </div>
+  </div>
+</div>
+
 <!-- ══ STAND ══════════════════════════════════════════════ -->
 <div id="screen-stand" style="display:none">
   <header>
@@ -620,12 +644,17 @@ textarea{resize:vertical;min-height:60px;}
 
 <script>
 // ══ FIREBASE INIT ═════════════════════════════════════════
-firebase.initializeApp({
-  apiKey: "AIzaSyAzgRTqCfCVvSOXOZh03QuWryjsaF922ms",
-  authDomain: "caisse-associative.firebaseapp.com",
-  projectId: "caisse-associative",
-});
-const firestore = firebase.firestore();
+let firestore = null;
+try {
+  firebase.initializeApp({
+    apiKey: "AIzaSyAzgRTqCfCVvSOXOZh03QuWryjsaF922ms",
+    authDomain: "caisse-associative.firebaseapp.com",
+    projectId: "caisse-associative",
+  });
+  firestore = firebase.firestore();
+} catch(e) {
+  console.warn('Firebase non disponible — mode hors-ligne');
+}
 
 // ══ STATE ══════════════════════════════════════════════════
 const COLLECTIONS = ['events','stands','articles','orders','transfers'];
@@ -645,12 +674,14 @@ const DB = {
 
 // Écrire vers Firestore
 function syncToFirestore(collection, data) {
+  if (!firestore) return;
   firestore.collection('caisse').doc(collection).set({ items: JSON.stringify(data) })
     .catch(err => console.warn('Firestore write error:', err));
 }
 
 // Charger tout depuis Firestore au démarrage
 async function loadFromFirestore() {
+  if (!firestore) return;
   try {
     for (const col of COLLECTIONS) {
       const doc = await firestore.collection('caisse').doc(col).get();
@@ -666,6 +697,7 @@ async function loadFromFirestore() {
 
 // Écouter les changements en temps réel (autres appareils)
 function startFirestoreSync() {
+  if (!firestore) return;
   COLLECTIONS.forEach(col => {
     firestore.collection('caisse').doc(col).onSnapshot(doc => {
       if (doc.exists && doc.data().items) {
@@ -844,10 +876,16 @@ window.closePwdModal = closePwdModal;
 // ══ NAVIGATION ════════════════════════════════════════════
 function goTo(screen) {
   currentScreen = screen;
-  ['home','admin','client','stand','caisse'].forEach(s =>
+  ['home','admin','client','billetterie','stand','caisse'].forEach(s =>
     document.getElementById('screen-'+s).style.display = s === screen ? 'block' : 'none'
   );
-  if (screen === 'home')   { document.getElementById('screen-home').style.display = 'flex'; hideCartBar(); stopBonPolling(); }
+  if (screen === 'home') {
+    document.getElementById('screen-home').style.display = 'flex';
+    hideCartBar(); stopBonPolling();
+    // Afficher le bouton billetterie si un événement actif a la billetterie activée
+    const hasBilletterie = DB.events.some(e => e.status === 'actif' && e.billetterie);
+    document.getElementById('btn-billetterie').style.display = hasBilletterie ? 'flex' : 'none';
+  }
   if (screen === 'admin')  { initSwatches(); renderEvents(); populateAdminSelects(); }
   if (screen === 'client') { renderClientEvts(); cart=[]; selectedPayment=null; updateCartBar(); }
   if (screen === 'stand')  { lastStandOrderCount = -1; populateStandSelects(); }
@@ -885,13 +923,15 @@ function addEvent() {
   const name = document.getElementById('evt-name').value.trim();
   const date = document.getElementById('evt-date').value;
   const lieu = document.getElementById('evt-lieu').value.trim();
+  const billetterie = document.getElementById('evt-billetterie').checked;
   if (!name) { return; }
   const evts = DB.events;
-  evts.unshift({ id: uid(), name, date, lieu, status: 'actif', createdAt: Date.now() });
+  evts.unshift({ id: uid(), name, date, lieu, billetterie, status: 'actif', createdAt: Date.now() });
   DB.events = evts;
   document.getElementById('evt-name').value = '';
   document.getElementById('evt-date').value = '';
   document.getElementById('evt-lieu').value = '';
+  document.getElementById('evt-billetterie').checked = false;
   renderEvents(); populateAdminSelects();
 }
 
@@ -912,6 +952,16 @@ function toggleStatus(id) {
   DB.events = evts;
   renderEvents();
 }
+
+function toggleBilletterie(id) {
+  const evts = DB.events;
+  const e = evts.find(e => e.id === id);
+  if (!e) return;
+  e.billetterie = !e.billetterie;
+  DB.events = evts;
+  renderEvents();
+}
+window.toggleBilletterie = toggleBilletterie;
 
 let exportEventId = null;
 
@@ -999,10 +1049,12 @@ function renderEvents() {
         <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
           <span class="pill ${e.status==='actif'?'pill-green':'pill-gray'}">${e.status}</span>
           <span class="pill pill-blue">${nbOrders} commande${nbOrders>1?'s':''}</span>
+          ${e.billetterie ? `<span class="pill" style="background:#f3e8ff;color:#7c3aed">🎫 Billetterie</span>` : ''}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
         <button class="btn btn-sm btn-secondary" onclick="showExportMenu('${e.id}')">📊 Export</button>
+        <button class="btn btn-sm btn-secondary" onclick="toggleBilletterie('${e.id}')">${e.billetterie?'🎫 Désactiver billetterie':'🎫 Activer billetterie'}</button>
         <button class="btn btn-sm btn-secondary" onclick="toggleStatus('${e.id}')">${e.status==='actif'?'Clôturer':'Réouvrir'}</button>
         <button class="btn btn-sm btn-danger" onclick="deleteEvent('${e.id}')">Supprimer</button>
       </div>
