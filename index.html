@@ -289,9 +289,6 @@ textarea{resize:vertical;min-height:60px;}
       <button class="btn btn-success btn-full" onclick="doExport('xlsx')" style="display:flex;align-items:center;justify-content:center;gap:8px">
         📗 Télécharger Excel (.xlsx)
       </button>
-      <button class="btn btn-full" onclick="doExport('gsheet')" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#0d9de0;color:#fff">
-        📊 Ouvrir dans Google Sheets
-      </button>
     </div>
   </div>
 </div>
@@ -869,34 +866,18 @@ function doExport(format) {
     a.click();
   }
 
-  if (format === 'xlsx' || format === 'gsheet') {
+  if (format === 'xlsx') {
     const wsData = [headers, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
-    // Largeur des colonnes
     ws['!cols'] = headers.map((h,i) => ({wch: i===0?12:i===1?18:i===2?14:i===3?14:i===4?20:12}));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Ventes');
     const xlsxData = XLSX.write(wb, {bookType:'xlsx', type:'array'});
     const blob = new Blob([xlsxData], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-
-    if (format === 'xlsx') {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename + '.xlsx';
-      a.click();
-    }
-
-    if (format === 'gsheet') {
-      // Télécharger le xlsx puis ouvrir Google Sheets import
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename + '.xlsx';
-      a.click();
-      // Ouvrir Google Sheets pour importer
-      setTimeout(() => {
-        window.open('https://sheets.google.com/create', '_blank');
-      }, 500);
-    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename + '.xlsx';
+    a.click();
   }
 
   closeExportModal();
