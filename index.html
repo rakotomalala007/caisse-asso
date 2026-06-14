@@ -275,6 +275,27 @@ textarea{resize:vertical;min-height:60px;}
   </button>
 </div>
 
+<!-- ══ MODAL EXPORT ═════════════════════════════════════════ -->
+<div class="overlay" id="modal-export">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📊 Exporter les ventes</span>
+      <button class="modal-close" onclick="closeExportModal()">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+      <button class="btn btn-primary btn-full" onclick="doExport('csv')" style="display:flex;align-items:center;justify-content:center;gap:8px">
+        📄 Télécharger CSV
+      </button>
+      <button class="btn btn-success btn-full" onclick="doExport('xlsx')" style="display:flex;align-items:center;justify-content:center;gap:8px">
+        📗 Télécharger Excel (.xlsx)
+      </button>
+      <button class="btn btn-full" onclick="doExport('gsheet')" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#0d9de0;color:#fff">
+        📊 Ouvrir dans Google Sheets
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL MOT DE PASSE ══════════════════════════════════ -->
 <div class="overlay" id="modal-pwd">
   <div class="modal">
@@ -581,6 +602,7 @@ textarea{resize:vertical;min-height:60px;}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
 // ══ FIREBASE INIT ═════════════════════════════════════════
@@ -795,26 +817,93 @@ function toggleStatus(id) {
   renderEvents();
 }
 
-function exportEvent(id, name) {
+let exportEventId = null;
+
+function showExportMenu(id) {
+  exportEventId = id;
+  document.getElementById('modal-export').classList.add('open');
+}
+function closeExportModal() {
+  document.getElementById('modal-export').classList.remove('open');
+  exportEventId = null;
+}
+
+function getExportRows(id) {
+  const evt = DB.events.find(e => e.id === id);
   const orders = DB.orders.filter(o => o.eventId === id);
-  if (!orders.length) { return; }
-  const rows = [['N° Commande','Date/Heure','Stand','Article','Qté','Prix unit.','Sous-total','Paiement','Statut']];
+  const name = evt ? evt.name : 'export';
+  const headers = ['N° Commande','Date/Heure','Prénom','Stand','Article','Qté','Prix unit.','Sous-total','Paiement','Statut'];
+  const rows = [];
   orders.forEach(o => {
     (o.items||[]).forEach(item => {
       rows.push([
-        o.num, new Date(o.createdAt).toLocaleString('fr-FR'),
+        o.num,
+        new Date(o.createdAt).toLocaleString('fr-FR'),
+        o.prenom || '',
         item.standName, item.name, item.qty,
-        item.price.toFixed(2), (item.price*item.qty).toFixed(2),
-        o.paymentMethod, o.status
+        parseFloat(item.price).toFixed(2),
+        (item.price * item.qty).toFixed(2),
+        o.paymentMethod === 'especes' ? 'Espèces' : o.paymentMethod === 'en_ligne' ? 'En ligne' : 'Carte',
+        o.status === 'encaissé' ? 'Encaissé' : o.status === 'annulé' ? 'Annulé' : o.status === 'servi_complet' ? 'Servi' : 'En attente'
       ]);
     });
   });
-  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = `ventes_${name.replace(/\s+/g,'_')}.csv`;
-  a.click();
+  return { headers, rows, name };
 }
+
+function doExport(format) {
+  if (!exportEventId) return;
+  const { headers, rows, name } = getExportRows(exportEventId);
+  const filename = 'ventes_' + name.split(' ').join('_');
+
+  if (format === 'csv') {
+    const csvRows = [headers, ...rows];
+    let csv = '';
+    csvRows.forEach((r, idx) => {
+      if (idx > 0) csv += '\n';
+      csv += r.map(c => '"' + String(c).split('"').join('""') + '"').join(',');
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8;'}));
+    a.download = filename + '.csv';
+    a.click();
+  }
+
+  if (format === 'xlsx' || format === 'gsheet') {
+    const wsData = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Largeur des colonnes
+    ws['!cols'] = headers.map((h,i) => ({wch: i===0?12:i===1?18:i===2?14:i===3?14:i===4?20:12}));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ventes');
+    const xlsxData = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    const blob = new Blob([xlsxData], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+
+    if (format === 'xlsx') {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename + '.xlsx';
+      a.click();
+    }
+
+    if (format === 'gsheet') {
+      // Télécharger le xlsx puis ouvrir Google Sheets import
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename + '.xlsx';
+      a.click();
+      // Ouvrir Google Sheets pour importer
+      setTimeout(() => {
+        window.open('https://sheets.google.com/create', '_blank');
+      }, 500);
+    }
+  }
+
+  closeExportModal();
+}
+window.showExportMenu = showExportMenu;
+window.closeExportModal = closeExportModal;
+window.doExport = doExport;
 
 function renderEvents() {
   const el = document.getElementById('events-list');
@@ -833,7 +922,7 @@ function renderEvents() {
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
-        <button class="btn btn-sm btn-secondary" onclick="exportEvent('${e.id}','${e.name.replace(/'/g,"\\'")}')">📊 Export</button>
+        <button class="btn btn-sm btn-secondary" onclick="showExportMenu('${e.id}')">📊 Export</button>
         <button class="btn btn-sm btn-secondary" onclick="toggleStatus('${e.id}')">${e.status==='actif'?'Clôturer':'Réouvrir'}</button>
         <button class="btn btn-sm btn-danger" onclick="deleteEvent('${e.id}')">Supprimer</button>
       </div>
@@ -2131,7 +2220,6 @@ window.newOrder = newOrder;
 window.addEvent = addEvent;
 window.deleteEvent = deleteEvent;
 window.toggleStatus = toggleStatus;
-window.exportEvent = exportEvent;
 window.adminTab = adminTab;
 window.addStand = addStand;
 window.deleteStand = deleteStand;
