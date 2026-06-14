@@ -41,7 +41,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--paper);color:v
 .btn-stand{background:var(--success);color:#fff;}
 .btn-caisse{background:var(--warn);color:var(--ink);}
 
-/* ── BANDE LOGOS PAIEMENT ── */
+/* ── NOTIFICATION BELL ── */
+.notif-bell{position:relative;cursor:pointer;font-size:1.5rem;line-height:1;animation:none;}
+.notif-bell.ringing{animation:bellRing .6s ease-in-out 3;}
+@keyframes bellRing{0%{transform:rotate(0)}10%{transform:rotate(14deg)}20%{transform:rotate(-14deg)}30%{transform:rotate(10deg)}40%{transform:rotate(-10deg)}50%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}70%{transform:rotate(2deg)}100%{transform:rotate(0)}}
+.notif-badge{position:absolute;top:-6px;right:-8px;background:var(--danger);color:#fff;border-radius:99px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;padding:0 5px;box-shadow:0 2px 6px rgba(224,67,58,.5);animation:pulseBadge 1.5s ease-in-out infinite;}
+@keyframes pulseBadge{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
 .pay-strip{
   position:absolute;bottom:0;left:0;right:0;z-index:2;
   padding:14px 20px 18px;
@@ -528,7 +533,13 @@ textarea{resize:vertical;min-height:60px;}
   <header>
     <button class="btn-back" onclick="goTo('home')">← Accueil</button>
     <div class="logo">Caisse<span>Asso</span></div>
-    <span class="badge badge-stand">Stand</span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="notif-bell" id="stand-bell" onclick="standTab('active')">
+        🔔
+        <div class="notif-badge" id="stand-notif-badge" style="display:none">0</div>
+      </div>
+      <span class="badge badge-stand">Stand</span>
+    </div>
   </header>
   <div class="container">
     <div class="card">
@@ -552,7 +563,13 @@ textarea{resize:vertical;min-height:60px;}
   <header>
     <button class="btn-back" onclick="goTo('home')">← Accueil</button>
     <div class="logo">Caisse<span>Asso</span></div>
-    <span class="badge badge-caisse">Caisse</span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="notif-bell" id="caisse-bell" onclick="caisseTab('pending')">
+        🔔
+        <div class="notif-badge" id="caisse-notif-badge" style="display:none">0</div>
+      </div>
+      <span class="badge badge-caisse">Caisse</span>
+    </div>
   </header>
   <div class="container">
     <div class="card" id="caisse-evt-card">
@@ -667,8 +684,90 @@ function startFirestoreSync() {
 function refreshCurrentScreen() {
   if (currentScreen === 'admin')  { renderEvents(); renderAdminOrders(); }
   if (currentScreen === 'client') { renderMenuGrid(currentClientStand); }
-  if (currentScreen === 'stand')  { renderStandOrders(); }
-  if (currentScreen === 'caisse') { renderCaisseOrders(); }
+  if (currentScreen === 'stand')  { renderStandOrders(); checkStandNotification(); }
+  if (currentScreen === 'caisse') { renderCaisseOrders(); checkCaisseNotification(); }
+}
+
+// ══ NOTIFICATIONS STAND & CAISSE ══════════════════════════
+let lastStandOrderCount = -1;
+let lastCaisseOrderCount = -1;
+
+function playNotifSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // 3 bips courts
+    [0, 0.15, 0.30].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.value = 0.3;
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.1);
+    });
+  } catch(e) {}
+}
+
+function triggerBell(bellId) {
+  const bell = document.getElementById(bellId);
+  if (!bell) return;
+  bell.classList.remove('ringing');
+  void bell.offsetWidth; // force reflow
+  bell.classList.add('ringing');
+  // Vibration mobile
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+}
+
+function updateNotifBadge(badgeId, count) {
+  const badge = document.getElementById(badgeId);
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function checkStandNotification() {
+  const standId = document.getElementById('stand-stand-sel').value;
+  const evtId = document.getElementById('stand-evt-sel').value;
+  if (!standId || !evtId) return;
+
+  const pending = DB.orders.filter(o =>
+    o.eventId === evtId &&
+    o.status !== 'annulé' &&
+    !(o.servedStands||[]).includes(standId) &&
+    o.items.some(i => i.standId === standId)
+  ).length;
+
+  updateNotifBadge('stand-notif-badge', pending);
+
+  if (lastStandOrderCount >= 0 && pending > lastStandOrderCount) {
+    playNotifSound();
+    triggerBell('stand-bell');
+  }
+  lastStandOrderCount = pending;
+}
+
+function checkCaisseNotification() {
+  const evtId = document.getElementById('caisse-evt-sel').value;
+  if (!evtId) return;
+
+  const pending = DB.orders.filter(o =>
+    o.eventId === evtId &&
+    o.status === 'en_attente_caisse'
+  ).length;
+
+  updateNotifBadge('caisse-notif-badge', pending);
+
+  if (lastCaisseOrderCount >= 0 && pending > lastCaisseOrderCount) {
+    playNotifSound();
+    triggerBell('caisse-bell');
+  }
+  lastCaisseOrderCount = pending;
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
@@ -751,8 +850,8 @@ function goTo(screen) {
   if (screen === 'home')   { document.getElementById('screen-home').style.display = 'flex'; hideCartBar(); stopBonPolling(); }
   if (screen === 'admin')  { initSwatches(); renderEvents(); populateAdminSelects(); }
   if (screen === 'client') { renderClientEvts(); cart=[]; selectedPayment=null; updateCartBar(); }
-  if (screen === 'stand')  { populateStandSelects(); }
-  if (screen === 'caisse') { populateCaisseSelects(); }}
+  if (screen === 'stand')  { lastStandOrderCount = -1; populateStandSelects(); }
+  if (screen === 'caisse') { lastCaisseOrderCount = -1; populateCaisseSelects(); }}
 
 // ══ MODAL ══════════════════════════════════════════════════
 function closeModal() { document.getElementById('modal-art').classList.remove('open'); }
