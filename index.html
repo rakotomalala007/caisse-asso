@@ -579,20 +579,78 @@ textarea{resize:vertical;min-height:60px;}
 </div>
 
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
 <script>
+// ══ FIREBASE INIT ═════════════════════════════════════════
+firebase.initializeApp({
+  apiKey: "AIzaSyAzgRTqCfCVvSOXOZh03QuWryjsaF922ms",
+  authDomain: "caisse-associative.firebaseapp.com",
+  projectId: "caisse-associative",
+});
+const firestore = firebase.firestore();
+
 // ══ STATE ══════════════════════════════════════════════════
+const COLLECTIONS = ['events','stands','articles','orders','transfers'];
+
 const DB = {
   get events()    { return JSON.parse(localStorage.getItem('ca_events')    || '[]'); },
   get stands()    { return JSON.parse(localStorage.getItem('ca_stands')    || '[]'); },
   get articles()  { return JSON.parse(localStorage.getItem('ca_articles')  || '[]'); },
   get orders()    { return JSON.parse(localStorage.getItem('ca_orders')    || '[]'); },
   get transfers() { return JSON.parse(localStorage.getItem('ca_transfers') || '[]'); },
-  set events(v)   { localStorage.setItem('ca_events',    JSON.stringify(v)); },
-  set stands(v)   { localStorage.setItem('ca_stands',    JSON.stringify(v)); },
-  set articles(v) { localStorage.setItem('ca_articles',  JSON.stringify(v)); },
-  set orders(v)   { localStorage.setItem('ca_orders',    JSON.stringify(v)); },
-  set transfers(v){ localStorage.setItem('ca_transfers', JSON.stringify(v)); },
+  set events(v)   { localStorage.setItem('ca_events',    JSON.stringify(v)); syncToFirestore('events', v); },
+  set stands(v)   { localStorage.setItem('ca_stands',    JSON.stringify(v)); syncToFirestore('stands', v); },
+  set articles(v) { localStorage.setItem('ca_articles',  JSON.stringify(v)); syncToFirestore('articles', v); },
+  set orders(v)   { localStorage.setItem('ca_orders',    JSON.stringify(v)); syncToFirestore('orders', v); },
+  set transfers(v){ localStorage.setItem('ca_transfers', JSON.stringify(v)); syncToFirestore('transfers', v); },
 };
+
+// Écrire vers Firestore
+function syncToFirestore(collection, data) {
+  firestore.collection('caisse').doc(collection).set({ items: JSON.stringify(data) })
+    .catch(err => console.warn('Firestore write error:', err));
+}
+
+// Charger tout depuis Firestore au démarrage
+async function loadFromFirestore() {
+  try {
+    for (const col of COLLECTIONS) {
+      const doc = await firestore.collection('caisse').doc(col).get();
+      if (doc.exists && doc.data().items) {
+        localStorage.setItem('ca_' + col, doc.data().items);
+      }
+    }
+    console.log('✓ Données chargées depuis Firestore');
+  } catch (err) {
+    console.warn('Firestore load error (mode hors-ligne):', err);
+  }
+}
+
+// Écouter les changements en temps réel (autres appareils)
+function startFirestoreSync() {
+  COLLECTIONS.forEach(col => {
+    firestore.collection('caisse').doc(col).onSnapshot(doc => {
+      if (doc.exists && doc.data().items) {
+        const stored = localStorage.getItem('ca_' + col);
+        const remote = doc.data().items;
+        if (stored !== remote) {
+          localStorage.setItem('ca_' + col, remote);
+          // Re-render l'écran actif
+          refreshCurrentScreen();
+        }
+      }
+    }, err => console.warn('Firestore sync error:', err));
+  });
+}
+
+function refreshCurrentScreen() {
+  if (currentScreen === 'admin')  { renderEvents(); renderAdminOrders(); }
+  if (currentScreen === 'client') { renderMenuGrid(currentClientStand); }
+  if (currentScreen === 'stand')  { renderStandOrders(); }
+  if (currentScreen === 'caisse') { renderCaisseOrders(); }
+}
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function orderNum() {
@@ -2166,7 +2224,15 @@ function handleStripeReturn() {
 
 // ── INIT
 handleStripeReturn();
-goTo('home');
+
+// Charger les données depuis Firestore puis démarrer
+loadFromFirestore().then(() => {
+  goTo('home');
+  startFirestoreSync();
+}).catch(() => {
+  goTo('home');
+  startFirestoreSync();
+});
 </script>
 </body>
 </html>
