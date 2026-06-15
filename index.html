@@ -634,6 +634,7 @@ textarea{resize:vertical;min-height:60px;}
     <div class="caisse-tabs">
       <button class="caisse-tab active" onclick="caisseTab('pending')">⏳ En attente</button>
       <button class="caisse-tab" onclick="caisseTab('done')">✅ Encaissées</button>
+      <button class="caisse-tab" onclick="caisseTab('tickets')">🎫 Billets</button>
       <button class="caisse-tab" onclick="caisseTab('history')">📋 Historique</button>
     </div>
     <div id="caisse-orders-list"></div>
@@ -2061,7 +2062,7 @@ function populateCaisseSelects() {
 function caisseTab(tab) {
   caisseCurrent = tab;
   document.querySelectorAll('.caisse-tabs .caisse-tab').forEach((t,i) =>
-    t.classList.toggle('active', (i===0&&tab==='pending')||(i===1&&tab==='done')||(i===2&&tab==='history'))
+    t.classList.toggle('active', (i===0&&tab==='pending')||(i===1&&tab==='done')||(i===2&&tab==='tickets')||(i===3&&tab==='history'))
   );
   renderCaisseOrders();
 }
@@ -2073,6 +2074,11 @@ function renderCaisseOrders() {
 
   if (caisseCurrent === 'history') {
     renderHistoryTable(evtId, el);
+    return;
+  }
+
+  if (caisseCurrent === 'tickets') {
+    renderCaisseTickets(evtId, el);
     return;
   }
 
@@ -2127,207 +2133,8 @@ function renderCaisseOrders() {
 }
 
 function encaisser(orderId) {
-  const orders = DB.orders;
-  const o = orders.find(o => o.id === orderId); if (!o) return;
-  o.status = 'encaissé';
-  o.paidAt = Date.now();
-  DB.orders = orders;
-  renderCaisseOrders();
-}
 
-function showCaisseCancel(orderId) {
-  document.getElementById('cconfirm-'+orderId).style.display = 'block';
-  document.getElementById('cbtn-cancel-'+orderId).style.display = 'none';
-}
-
-function hideCaisseCancel(orderId) {
-  const el = document.getElementById('cconfirm-'+orderId);
-  if (el) el.style.display = 'none';
-  const btn = document.getElementById('cbtn-cancel-'+orderId);
-  if (btn) btn.style.display = '';
-}
-
-function caisseAnnuler(orderId) {
-  const orders = DB.orders;
-  const o = orders.find(o => o.id === orderId); if (!o) return;
-  const arts = DB.articles;
-  o.items.forEach(item => {
-    const a = arts.find(a => a.id === item.id);
-    if (a) a.stock += item.qty;
-  });
-  DB.articles = arts;
-  o.status = 'annulé';
-  o.cancelledAt = Date.now();
-  DB.orders = orders;
-  renderCaisseOrders();
-}
-
-// ══ ADMIN COMMANDES ═══════════════════════════════════════
-let adminOrdersFilter = 'pending';
-
-function populateAdminOrdersSelect() {
-  const evts = DB.events.filter(e => e.status === 'actif');
-  const sel = document.getElementById('admin-orders-evt');
-  const prev = sel.value;
-  sel.innerHTML = `<option value="">— Sélectionner —</option>` +
-    evts.map(e => `<option value="${e.id}"${e.id===prev?' selected':''}>${e.name}</option>`).join('');
-  // Présélectionner si pas déjà sélectionné
-  if (!prev && evts.length >= 1) sel.value = evts[0].id;
-  // Masquer si un seul actif
-  const wrap = sel.closest('.f');
-  if (wrap) wrap.style.display = evts.length <= 1 ? 'none' : '';
-}
-
-function adminOrdersTab(tab) {
-  adminOrdersFilter = tab;
-  document.querySelectorAll('#admin-orders-tabs .caisse-tab').forEach((t,i) =>
-    t.classList.toggle('active', (i===0&&tab==='pending')||(i===1&&tab==='done')||(i===2&&tab==='history'))
-  );
-  renderAdminOrders();
-}
-
-function renderAdminOrders() {
-  const evtId = document.getElementById('admin-orders-evt').value;
-  const el = document.getElementById('admin-orders-list');
-  if (!evtId) { el.innerHTML = `<div class="empty"><div class="e">📅</div><p>Sélectionnez un événement.</p></div>`; return; }
-
-  if (adminOrdersFilter === 'history') {
-    renderHistoryTable(evtId, el);
-    return;
-  }
-
-  const orders = DB.orders.filter(o => {
-    if (o.eventId !== evtId) return false;
-    if (adminOrdersFilter === 'pending') return o.status === 'en_attente_caisse';
-    return o.status === 'encaissé' || o.status === 'servi_complet';
-  }).sort((a,b) => a.createdAt - b.createdAt);
-
-  if (!orders.length) {
-    el.innerHTML = `<div class="empty"><div class="e">${adminOrdersFilter==='pending'?'✅':'📋'}</div><p>${adminOrdersFilter==='pending'?'Aucune commande en attente.':'Aucune commande encaissée.'}</p></div>`;
-    return;
-  }
-
-  const total = orders.reduce((s,o) => s + o.items.reduce((ss,i) => ss+i.price*i.qty, 0), 0);
-
-  el.innerHTML = (adminOrdersFilter==='pending' ? `
-    <div class="card" style="background:var(--accent);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
-      <div><div style="font-size:.8rem;opacity:.8">${orders.length} commande${orders.length>1?'s':''} en attente</div>
-      <div style="font-size:1.3rem;font-weight:800">${total.toFixed(2)} €</div></div>
-      <div style="font-size:2rem">⏳</div>
-    </div>` : '') +
-
-  orders.map(o => {
-    const tot = o.items.reduce((s,i)=>s+i.price*i.qty,0);
-    // Grouper par stand
-    const byStand = {};
-    o.items.forEach(i => { if(!byStand[i.standId]) byStand[i.standId]={name:i.standName,items:[]}; byStand[i.standId].items.push(i); });
-    const standIds = Object.keys(byStand);
-    const servedStands = o.servedStands || [];
-    const servedCount = standIds.filter(s => servedStands.includes(s)).length;
-
-    return `<div class="order-card" style="border-color:${o.status==='en_attente_caisse'?'var(--warn)':'var(--success)'}">
-      <div class="order-card-header">
-        <div>
-          <div class="order-num">#${o.num}</div>
-          ${o.prenom ? `<div style="font-size:.82rem;font-weight:700;color:var(--accent)">👤 ${o.prenom}${o.contact?' · '+o.contact:''}</div>` : ''}
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span class="pill ${o.paymentMethod==='especes'?'pill-warn':o.paymentMethod==='en_ligne'?'pill-green':'pill-blue'}">${o.paymentMethod==='especes'?'💵 Espèces':o.paymentMethod==='en_ligne'?'📱 En ligne':'💳 Carte'}</span>
-          <div class="order-time">${new Date(o.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
-        </div>
-      </div>
-
-      ${standIds.map(sid => {
-        const s = byStand[sid];
-        const isServed = servedStands.includes(sid);
-        return `<div style="margin-top:10px;padding:10px;background:${isServed?'#e3f9f0':'#fff8e0'};border-radius:8px;">
-          <div style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;justify-content:space-between">
-            <span>🏪 ${s.name}</span>
-            <span style="color:${isServed?'var(--success)':'var(--warn)'}">${isServed?'✅ Servi':'⏳ En préparation'}</span>
-          </div>
-          ${s.items.map(i=>`<div class="order-line-stand"><span>${i.name} × ${i.qty}</span><span style="font-weight:600">${(i.price*i.qty).toFixed(2)} €</span></div>`).join('')}
-        </div>`;
-      }).join('')}
-
-      <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
-        <span>Total · ${servedCount}/${standIds.length} stand${standIds.length>1?'s':''} servis</span>
-        <span style="color:var(--accent)">${tot.toFixed(2)} €</span>
-      </div>
-      ${o.status==='en_attente_caisse'
-        ? `<div style="display:flex;gap:8px;margin-top:10px">
-            <button class="btn btn-success" style="flex:1" onclick="adminEncaisser('${o.id}')">✓ Encaisser</button>
-            <button class="btn btn-danger" style="flex:1" id="btn-cancel-${o.id}" onclick="showCancelConfirm('${o.id}')">✕ Annuler</button>
-           </div>
-           <div id="confirm-${o.id}" style="display:none;margin-top:8px;background:#ffeaea;border-radius:8px;padding:10px;text-align:center">
-             <div style="font-size:.85rem;font-weight:600;margin-bottom:8px">Confirmer l'annulation ?</div>
-             <div style="display:flex;gap:8px">
-               <button class="btn btn-danger" style="flex:1" onclick="cancelOrder('${o.id}')">Oui, annuler</button>
-               <button class="btn btn-secondary" style="flex:1" onclick="hideCancelConfirm('${o.id}')">Non</button>
-             </div>
-           </div>`
-        : `<div style="text-align:center;color:var(--success);font-size:.82rem;font-weight:600;margin-top:8px">✅ Encaissé${o.paidAt?' à '+new Date(o.paidAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):''}</div>`}
-    </div>`;
-  }).join('');
-}
-
-function renderHistoryTable(evtId, el) {
-  const orders = DB.orders
-    .filter(o => o.eventId === evtId)
-    .sort((a,b) => b.createdAt - a.createdAt);
-
-  if (!orders.length) {
-    el.innerHTML = `<div class="empty"><div class="e">📋</div><p>Aucune commande enregistrée.</p></div>`;
-    return;
-  }
-
-  const statusLabel = s => {
-    if (s === 'en_attente_caisse') return `<span class="pill pill-warn">⏳ En attente</span>`;
-    if (s === 'encaissé')          return `<span class="pill pill-green">✅ Encaissée</span>`;
-    if (s === 'servi_complet')     return `<span class="pill pill-green">✅ Servie</span>`;
-    if (s === 'annulé')            return `<span class="pill" style="background:#ffeaea;color:var(--danger)">❌ Annulée</span>`;
-    return `<span class="pill pill-gray">${s}</span>`;
-  };
-
-  const totalAll = orders
-    .filter(o => o.status !== 'annulé')
-    .reduce((s,o) => s + o.items.reduce((ss,i)=>ss+i.price*i.qty,0), 0);
-
-  el.innerHTML = `
-    <div class="card" style="padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:.85rem;color:var(--ink-light)">${orders.length} commande${orders.length>1?'s':''} au total</div>
-      <div style="font-weight:800;font-size:1.1rem;color:var(--accent)">${totalAll.toFixed(2)} €</div>
-    </div>
-    <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;font-size:.85rem;background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)">
-      <thead>
-        <tr style="background:var(--accent-lt);color:var(--accent-dk)">
-          <th style="padding:10px 12px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">N°</th>
-          <th style="padding:10px 12px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Prénom</th>
-          <th style="padding:10px 12px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Heure</th>
-          <th style="padding:10px 12px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Paiement</th>
-          <th style="padding:10px 12px;text-align:right;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Total</th>
-          <th style="padding:10px 12px;text-align:center;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Statut</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${orders.map((o,idx) => {
-          const total = o.items.reduce((s,i)=>s+i.price*i.qty,0);
-          const heure = new Date(o.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-          const isCancelled = o.status === 'annulé';
-          return `<tr style="border-top:1px solid var(--border);${isCancelled?'opacity:.55':''}${idx%2===0?'':'background:#fafafa'}">
-            <td style="padding:10px 12px;font-weight:700;color:var(--accent)">#${o.num}</td>
-            <td style="padding:10px 12px;font-weight:600">${o.prenom||'—'}${o.contact?`<div style="font-size:.72rem;color:var(--ink-light)">${o.contact}</div>`:''}</td>
-            <td style="padding:10px 12px;color:var(--ink-light)">${heure}</td>
-            <td style="padding:10px 12px">${o.paymentMethod==='especes'?'💵 Espèces':o.paymentMethod==='en_ligne'?'📱 En ligne':'💳 Carte'}</td>
-            <td style="padding:10px 12px;text-align:right;font-weight:700;${isCancelled?'text-decoration:line-through;color:var(--ink-light)':'color:var(--accent)'}">${total.toFixed(2)} €</td>
-            <td style="padding:10px 12px;text-align:center">${statusLabel(o.status)}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    </div>`;
-}
-
+// ── Caisse : onglet Billets
 window.renderHistoryTable = renderHistoryTable;
 
 function adminEncaisser(orderId) {
@@ -2450,27 +2257,21 @@ async function redirectToStripe(order) {
 // Gérer le retour de Stripe (success ou cancel)
 function handleStripeReturn() {
   const params = new URLSearchParams(window.location.search);
-
   if (params.get('payment_success') === 'true') {
     const orderId = params.get('order_id');
     if (orderId) {
       const orders = DB.orders;
       const o = orders.find(o => o.id === orderId);
       if (o && o.status === 'en_attente_caisse') {
-        o.status = 'encaissé';
-        o.paidAt = Date.now();
-        DB.orders = orders;
+        o.status = 'encaissé'; o.paidAt = Date.now(); DB.orders = orders;
       }
-      // Afficher le bon payé
       goTo('client');
       document.getElementById('client-menu').style.display = 'none';
       document.getElementById('client-confirm').style.display = 'block';
       showBon(orderId);
     }
-    // Nettoyer l'URL
     window.history.replaceState({}, '', window.location.pathname);
   }
-
   if (params.get('payment_cancel') === 'true') {
     const orderId = params.get('order_id');
     if (orderId) {
@@ -2483,222 +2284,6 @@ function handleStripeReturn() {
     window.history.replaceState({}, '', window.location.pathname);
   }
 }
-
-// ══ BILLETTERIE ════════════════════════════════════════════
-let currentBilletterieEvt = null;
-let ticketCart = [];
-let selectedTicketPayment = null;
-
-function populateBilletSelects() {
-  const evts = DB.events.filter(e => e.billetterie);
-  const sel = document.getElementById('billet-evt-sel');
-  sel.innerHTML = '<option value="">— Événement avec billetterie —</option>' +
-    evts.map(e => '<option value="'+e.id+'">'+e.name+'</option>').join('');
-  renderTicketTypes();
-}
-
-function renderTicketTypes() {
-  const evtId = document.getElementById('billet-evt-sel').value;
-  const form = document.getElementById('billet-type-form');
-  const list = document.getElementById('ticket-types-list');
-  const adminOrders = document.getElementById('ticket-orders-admin');
-  if (!evtId) { form.style.display='none'; list.innerHTML=''; adminOrders.innerHTML=''; return; }
-  form.style.display = 'block';
-  const types = DB.ticketTypes.filter(t => t.eventId === evtId);
-  if (!types.length) {
-    list.innerHTML = '<div class="empty"><div class="e">🎫</div><p>Aucun type de billet configuré.</p></div>';
-  } else {
-    list.innerHTML = types.map(t => {
-      const sold = (t.initialStock||t.stock) - t.stock;
-      return '<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">'+t.label+' <span class="pill pill-gray" style="font-size:.7rem">'+t.category+'</span></div><div style="font-size:.82rem;color:var(--ink-light)">'+parseFloat(t.price).toFixed(2)+' € · '+sold+' vendu'+(sold>1?'s':'')+' / '+(t.initialStock||t.stock)+' places</div></div><div style="display:flex;gap:6px;align-items:center"><span style="font-weight:800;font-size:1.1rem;color:'+(t.stock===0?'var(--danger)':t.stock<=5?'var(--warn)':'var(--success)')+'">'+t.stock+'</span><button class="btn btn-sm btn-danger" onclick="deleteTicketType(\''+t.id+'\')">✕</button></div></div>';
-    }).join('');
-  }
-  const tOrders = DB.ticketOrders.filter(o => o.eventId === evtId).sort((a,b) => b.createdAt - a.createdAt);
-  if (tOrders.length) {
-    adminOrders.innerHTML = '<div class="section-title"><div class="icon-box">📋</div>Commandes de billets ('+tOrders.length+')</div>' +
-      tOrders.map(o => {
-        const total = o.items.reduce((s,i) => s + i.price * i.qty, 0);
-        return '<div class="card" style="margin-bottom:8px;border-left:3px solid '+(o.status==='payé'?'var(--success)':o.status==='annulé'?'var(--danger)':'var(--warn)')+'"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>'+o.buyerName+'</strong> '+(o.email?'· '+o.email:'')+'</div><span class="pill '+(o.status==='payé'?'pill-green':o.status==='annulé'?'':'pill-warn')+'" '+(o.status==='annulé'?'style="background:#ffeaea;color:var(--danger)"':'')+'>'+(o.status==='payé'?'✅ Payé':o.status==='annulé'?'❌ Annulé':'⏳ En attente')+'</span></div><div style="font-size:.82rem;color:var(--ink-light);margin-top:4px">'+o.items.map(i=>i.label+' × '+i.qty).join(', ')+' — '+total.toFixed(2)+' €</div></div>';
-      }).join('');
-  } else { adminOrders.innerHTML = ''; }
-}
-
-function addTicketType() {
-  const evtId = document.getElementById('billet-evt-sel').value;
-  if (!evtId) return;
-  const category = document.getElementById('billet-cat').value;
-  const label = document.getElementById('billet-label').value.trim() || category;
-  const price = parseFloat(document.getElementById('billet-price').value) || 0;
-  const stock = parseInt(document.getElementById('billet-stock').value) || 0;
-  if (stock <= 0) return;
-  const types = DB.ticketTypes;
-  types.push({ id: uid(), eventId: evtId, category, label, price, stock, initialStock: stock, createdAt: Date.now() });
-  DB.ticketTypes = types;
-  document.getElementById('billet-label').value = '';
-  document.getElementById('billet-price').value = '0';
-  document.getElementById('billet-stock').value = '50';
-  renderTicketTypes();
-}
-
-function deleteTicketType(id) { DB.ticketTypes = DB.ticketTypes.filter(t => t.id !== id); renderTicketTypes(); }
-window.addTicketType = addTicketType;
-window.deleteTicketType = deleteTicketType;
-window.renderTicketTypes = renderTicketTypes;
-window.populateBilletSelects = populateBilletSelects;
-
-function renderBilletterieEvts() {
-  const evts = DB.events.filter(e => e.status === 'actif' && e.billetterie);
-  const selectEl = document.getElementById('billetterie-evt-select');
-  const contentEl = document.getElementById('billetterie-content');
-  ticketCart = []; selectedTicketPayment = null;
-  if (!evts.length) { selectEl.innerHTML = ''; contentEl.innerHTML = '<div class="empty" style="margin-top:40px"><div class="e">🎫</div><p>Aucun événement avec billetterie active.</p></div>'; return; }
-  if (evts.length === 1) {
-    const d = evts[0].date ? new Date(evts[0].date+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : '';
-    selectEl.innerHTML = '<div class="card" style="text-align:center"><div style="font-weight:700;font-size:1.05rem;color:var(--accent)">'+evts[0].name+'</div><div style="font-size:.82rem;color:var(--ink-light);margin-top:2px">'+d+(evts[0].lieu?' · '+evts[0].lieu:'')+'</div></div>';
-    currentBilletterieEvt = evts[0].id; renderBilletterieContent(evts[0].id); return;
-  }
-  selectEl.innerHTML = '<div class="card"><div class="f"><label>🎫 Choisir un événement</label><select id="billetterie-evt-sel" onchange="onBilletterieEvtChange()"><option value="">— Sélectionner —</option>' +
-    evts.map(e => { const d2 = e.date ? new Date(e.date+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) : ''; return '<option value="'+e.id+'">'+e.name+(d2?' — '+d2:'')+'</option>'; }).join('') +
-    '</select></div></div>';
-  contentEl.innerHTML = ''; currentBilletterieEvt = null;
-}
-
-function onBilletterieEvtChange() {
-  const evtId = document.getElementById('billetterie-evt-sel').value;
-  currentBilletterieEvt = evtId || null; ticketCart = [];
-  if (evtId) renderBilletterieContent(evtId);
-  else document.getElementById('billetterie-content').innerHTML = '';
-}
-
-function renderBilletterieContent(evtId) {
-  const el = document.getElementById('billetterie-content');
-  const evt = DB.events.find(e => e.id === evtId);
-  const types = DB.ticketTypes.filter(t => t.eventId === evtId && t.stock > 0);
-  if (!evt) return;
-  if (!types.length) { el.innerHTML = '<div class="empty" style="margin-top:30px"><div class="e">🎫</div><p>Aucun billet disponible pour cet événement.</p></div>'; return; }
-  el.innerHTML = '<div style="margin-top:12px">' +
-    types.map(t => {
-      const inCart = ticketCart.find(c => c.typeId === t.id);
-      const qty = inCart ? inCart.qty : 0;
-      return '<div class="card" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">'+t.label+'</div><div style="font-size:.85rem;color:var(--accent);font-weight:700">'+(t.price>0?parseFloat(t.price).toFixed(2)+' €':'Gratuit')+'</div><div style="font-size:.75rem;color:var(--ink-light)">'+t.stock+' place'+(t.stock>1?'s':'')+' restante'+(t.stock>1?'s':'')+'</div></div><div class="qty-ctrl"><button class="qty-btn" onclick="changeTicketQty(\''+t.id+'\',-1)">−</button><div class="qty-val">'+qty+'</div><button class="qty-btn" onclick="changeTicketQty(\''+t.id+'\',1)" '+(qty>=t.stock?'disabled style="opacity:.35"':'')+'>+</button></div></div>';
-    }).join('') + '</div><div id="ticket-cart-summary"></div>';
-  renderTicketCartSummary();
-}
-
-function changeTicketQty(typeId, delta) {
-  const t = DB.ticketTypes.find(t => t.id === typeId); if (!t) return;
-  let item = ticketCart.find(c => c.typeId === typeId);
-  if (!item && delta > 0) { ticketCart.push({ typeId, label: t.label, price: t.price, qty: 0, category: t.category }); item = ticketCart[ticketCart.length - 1]; }
-  if (!item) return;
-  if (delta > 0 && item.qty >= t.stock) return;
-  item.qty += delta;
-  if (item.qty <= 0) ticketCart = ticketCart.filter(c => c.typeId !== typeId);
-  renderBilletterieContent(currentBilletterieEvt);
-}
-window.changeTicketQty = changeTicketQty;
-
-function renderTicketCartSummary() {
-  const el = document.getElementById('ticket-cart-summary'); if (!el) return;
-  const totalQty = ticketCart.reduce((s,c) => s + c.qty, 0);
-  const totalPrice = ticketCart.reduce((s,c) => s + c.price * c.qty, 0);
-  if (!totalQty) { el.innerHTML = ''; return; }
-  let nameFields = ''; let idx = 0;
-  ticketCart.forEach(c => { for (let i = 0; i < c.qty; i++) {
-    nameFields += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span style="font-size:.75rem;color:var(--ink-light);min-width:80px">'+c.label+' #'+(i+1)+'</span><input type="text" class="ticket-name-input" data-idx="'+idx+'" placeholder="Nom du participant" style="flex:1;border-radius:var(--radius-sm);border:1.5px solid var(--border);padding:8px 10px;font-size:.85rem;font-family:inherit"></div>';
-    idx++;
-  }});
-  el.innerHTML = '<div class="card" style="margin-top:16px"><div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.05rem;margin-bottom:14px"><span>'+totalQty+' billet'+(totalQty>1?'s':'')+'</span><span style="color:var(--accent)">'+totalPrice.toFixed(2)+' €</span></div><div style="margin-bottom:14px"><div style="font-weight:700;font-size:.85rem;margin-bottom:8px">👤 Acheteur</div><input type="text" id="ticket-buyer-name" placeholder="Nom complet *" style="width:100%;margin-bottom:6px;border-radius:var(--radius-sm);border:1.5px solid var(--border);padding:9px 12px;font-size:.88rem;font-family:inherit"><input type="text" id="ticket-buyer-email" placeholder="Email (optionnel)" style="width:100%;margin-bottom:6px;border-radius:var(--radius-sm);border:1.5px solid var(--border);padding:9px 12px;font-size:.88rem;font-family:inherit"><input type="text" id="ticket-buyer-phone" placeholder="Téléphone (optionnel)" style="width:100%;border-radius:var(--radius-sm);border:1.5px solid var(--border);padding:9px 12px;font-size:.88rem;font-family:inherit"></div><div style="margin-bottom:14px"><div style="font-weight:700;font-size:.85rem;margin-bottom:8px">🎫 Noms des participants</div>'+nameFields+'</div><div class="payment-methods has-3" style="margin-bottom:14px"><div class="pay-btn" id="tpay-cash" onclick="selectTicketPayment(\'especes\')"><div class="pay-icon">💵</div>Espèces</div><div class="pay-btn" id="tpay-card" onclick="selectTicketPayment(\'carte\')"><div class="pay-icon">💳</div>Terminal</div><div class="pay-btn" id="tpay-online" onclick="selectTicketPayment(\'en_ligne\')"><div class="pay-icon">📱</div>En ligne</div></div><button class="btn btn-success btn-full" id="btn-ticket-order" onclick="placeTicketOrder()" disabled>🎫 Confirmer et générer les billets</button></div>';
-}
-
-function selectTicketPayment(method) {
-  selectedTicketPayment = method;
-  document.getElementById('tpay-cash').classList.toggle('selected', method==='especes');
-  document.getElementById('tpay-card').classList.toggle('selected', method==='carte');
-  document.getElementById('tpay-online').classList.toggle('selected', method==='en_ligne');
-  document.getElementById('btn-ticket-order').disabled = false;
-}
-window.selectTicketPayment = selectTicketPayment;
-
-function placeTicketOrder() {
-  if (!ticketCart.length || !selectedTicketPayment || !currentBilletterieEvt) return;
-  const buyerName = document.getElementById('ticket-buyer-name').value.trim();
-  if (!buyerName) { document.getElementById('ticket-buyer-name').style.borderColor='var(--danger)'; document.getElementById('ticket-buyer-name').focus(); return; }
-  const email = document.getElementById('ticket-buyer-email').value.trim();
-  const phone = document.getElementById('ticket-buyer-phone').value.trim();
-  const nameInputs = document.querySelectorAll('.ticket-name-input');
-  const participantNames = []; nameInputs.forEach(input => participantNames.push(input.value.trim() || buyerName));
-  const evt = DB.events.find(e => e.id === currentBilletterieEvt);
-  const evtPrefix = evt.name.replace(/[^a-zA-Z]/g,'').substring(0,3).toUpperCase() || 'EVT';
-  const now = new Date();
-  const dd = String(now.getDate()).padStart(2,'0');
-  const mm = String(now.getMonth()+1).padStart(2,'0');
-  const tickets = DB.tickets;
-  const existingCount = tickets.filter(t => t.eventId === currentBilletterieEvt).length;
-  const newTickets = []; let seq = existingCount; let nameIdx = 0;
-  ticketCart.forEach(c => { for (let i = 0; i < c.qty; i++) {
-    seq++; const seqStr = String(seq).padStart(3,'0');
-    newTickets.push({ id: uid(), eventId: currentBilletterieEvt, typeId: c.typeId, typeName: c.label, category: c.category, price: c.price, participantName: participantNames[nameIdx] || buyerName, buyerName, ticketNum: evtPrefix+dd+mm+seqStr, displayNum: seqStr, status: 'valid', createdAt: Date.now() });
-    nameIdx++;
-  }});
-  tickets.push(...newTickets); DB.tickets = tickets;
-  const types = DB.ticketTypes;
-  ticketCart.forEach(c => { const t = types.find(t => t.id === c.typeId); if (t) t.stock -= c.qty; });
-  DB.ticketTypes = types;
-  const orderId = uid();
-  const tOrders = DB.ticketOrders;
-  tOrders.push({ id: orderId, eventId: currentBilletterieEvt, buyerName, email, phone, items: ticketCart.map(c => ({...c})), total: ticketCart.reduce((s,c) => s + c.price * c.qty, 0), paymentMethod: selectedTicketPayment, status: selectedTicketPayment === 'en_ligne' ? 'en_attente' : 'payé', ticketIds: newTickets.map(t => t.id), createdAt: Date.now() });
-  DB.ticketOrders = tOrders;
-  const el = document.getElementById('billetterie-content');
-  el.innerHTML = '<div class="card" style="text-align:center;margin-top:20px"><div style="font-size:3rem;margin-bottom:10px">🎫</div><div style="font-size:1.2rem;font-weight:800;color:var(--success);margin-bottom:6px">Billets réservés !</div><div style="color:var(--ink-light);margin-bottom:16px">'+newTickets.length+' billet'+(newTickets.length>1?'s':'')+' pour <strong>'+buyerName+'</strong></div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">' +
-    newTickets.map(t => '<div style="padding:8px 12px;background:var(--accent-lt);border-radius:8px;font-size:.85rem;display:flex;justify-content:space-between"><span>'+t.typeName+' — '+t.participantName+'</span><strong style="color:var(--accent)">#'+t.displayNum+'</strong></div>').join('') +
-    '</div><button class="btn btn-primary btn-full" onclick="downloadTicketsPDF(\''+orderId+'\')">📥 Télécharger les billets PDF</button><button class="btn btn-secondary btn-full" style="margin-top:8px" onclick="renderBilletterieEvts()">← Retour</button></div>';
-  ticketCart = []; selectedTicketPayment = null;
-}
-window.placeTicketOrder = placeTicketOrder;
-
-function downloadTicketsPDF(orderId) {
-  try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p','mm','a4');
-    const order = DB.ticketOrders.find(o => o.id === orderId);
-    const evt = DB.events.find(e => e.id === order.eventId);
-    const tix = DB.tickets.filter(t => order.ticketIds.includes(t.id));
-    tix.forEach((ticket, idx) => {
-      if (idx > 0) doc.addPage();
-      doc.setDrawColor(91,79,207); doc.setLineWidth(0.5);
-      doc.roundedRect(15,20,180,110,6,6);
-      doc.setLineDashPattern([2,2],0); doc.setDrawColor(180,180,180);
-      doc.line(145,25,145,125); doc.setLineDashPattern([],0);
-      doc.setFontSize(20); doc.setFont('helvetica','bold'); doc.setTextColor(91,79,207);
-      doc.text(evt.name, 25, 40);
-      doc.setFontSize(11); doc.setTextColor(80,80,80); doc.setFont('helvetica','normal');
-      if (evt.date) { const d=new Date(evt.date+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); doc.text(d,25,52); }
-      if (evt.lieu) doc.text(evt.lieu,25,60);
-      doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
-      doc.text(ticket.typeName,25,78);
-      doc.setFontSize(11); doc.setFont('helvetica','normal');
-      doc.text(ticket.participantName,25,88);
-      doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(91,79,207);
-      doc.text(ticket.price>0?ticket.price.toFixed(2)+' EUR':'GRATUIT',25,102);
-      doc.setFontSize(8); doc.setTextColor(150,150,150);
-      doc.text('N. '+ticket.ticketNum,25,115);
-      doc.text('Acheteur : '+ticket.buyerName,25,121);
-      var qr = qrcode(0,'M'); qr.addData(ticket.ticketNum); qr.make();
-      var qrSize=40, qrX=152, qrY=35, cells=qr.getModuleCount(), cellSize=qrSize/cells;
-      doc.setFillColor(0,0,0);
-      for (var r=0;r<cells;r++) for (var c=0;c<cells;c++) if(qr.isDark(r,c)) doc.rect(qrX+c*cellSize,qrY+r*cellSize,cellSize,cellSize,'F');
-      doc.setFontSize(28); doc.setFont('helvetica','bold'); doc.setTextColor(91,79,207);
-      doc.text('#'+ticket.displayNum,172,100,{align:'center'});
-      doc.setFontSize(7); doc.setTextColor(150,150,150);
-      doc.text('Scanner pour valider',172,108,{align:'center'});
-    });
-    doc.save('billets_'+evt.name.split(' ').join('_')+'.pdf');
-  } catch(err) { console.error('PDF error:',err); alert('Erreur PDF. Réessayez.'); }
-}
-window.downloadTicketsPDF = downloadTicketsPDF;
-window.onBilletterieEvtChange = onBilletterieEvtChange;
-
-// ── INIT
 handleStripeReturn();
 
 // Charger les données depuis Firestore puis démarrer
